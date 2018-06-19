@@ -12,8 +12,21 @@ namespace BehaviorTree
 		Running,
 	}
 
-	public class NodeBase : MonoBehaviour 
+	public class NodeBase
 	{
+		protected string _nodeName;
+		public string nodeName
+		{
+			protected set
+			{
+				_nodeName = value;
+			}
+			get
+			{
+				return _nodeName;
+			}
+		}
+
 		protected NodeBase _parentNode;
 		public virtual NodeBase parentNode
 		{
@@ -28,6 +41,8 @@ namespace BehaviorTree
 		}
 
 		protected List<NodeBase> childNodes = new List<NodeBase>();
+		protected NodeBase[] cachedChildNodes = null;
+		protected bool isChildNodesChanged = true;
 
 		protected NodeState _nodeState;
 		public virtual NodeState nodeState
@@ -42,8 +57,12 @@ namespace BehaviorTree
 			}
 		}
 
+		public NodeBase(string nodeName)
+		{
+			this.nodeName = nodeName;
+		}
 
-		public virtual bool AddChildNode(NodeBase node, int index = -1)
+		public virtual bool AddChild(NodeBase node, int index = -1)
 		{
 			if (childNodes == null) return false;
 			//if (childNodes.Contains(node)) return false;
@@ -52,11 +71,12 @@ namespace BehaviorTree
 			else childNodes.Insert(index, node);
 
 			node.parentNode = this;
+			isChildNodesChanged = true;
 
 			return true;
 		}
 
-		public virtual bool RemoveChildNode(NodeBase node)
+		public virtual bool RemoveChild(NodeBase node)
 		{
 			if (childNodes == null) return false;
 
@@ -64,11 +84,12 @@ namespace BehaviorTree
 			if (nodeTemp == null) return false;
 
 			nodeTemp.parentNode = null;
+			isChildNodesChanged = true;
 
 			return childNodes.Remove(node);
 		}
 
-		public virtual void ClearChildNode()
+		public virtual void ClearChildren()
 		{
 			if (childNodes == null) return;
 
@@ -85,17 +106,21 @@ namespace BehaviorTree
 			return childNodes.Count;
 		}
 
-		protected virtual IEnumerator RunningRoutine()
+		public virtual NodeBase[] GetAllChildren()
+		{
+			if (childNodes == null) return null;
+			if (isChildNodesChanged)
+			{
+				cachedChildNodes = childNodes.ToArray();
+				isChildNodesChanged = false;
+			}
+			return cachedChildNodes;
+		}
+
+		public virtual IEnumerator RunningRoutine()
 		{
 			nodeState = NodeState.Running;
-			var enumrator = childNodes.GetEnumerator();
-			while(enumrator.MoveNext())
-			{
-				yield return enumrator.Current.RunningRoutine();
-
-				if (enumrator.Current.nodeState == NodeState.Running)
-					break;
-			}
+			yield return null;
 			nodeState = NodeState.None;
 		}
 	}
