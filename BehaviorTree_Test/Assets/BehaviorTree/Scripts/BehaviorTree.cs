@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Xml;
 
 namespace BehaviorTree
 {
@@ -33,6 +34,35 @@ namespace BehaviorTree
 		}
 
 		Coroutine runRoutine;
+
+
+		public void GenerateNode(XmlDocument xml)
+		{
+			rootNode = null;
+			GenerateNodeByXML(xml.FirstChild, rootNode);
+		}
+
+		void GenerateNodeByXML(XmlNode xmlNode, NodeBase btNode)
+		{
+			var enumrator = xmlNode.GetEnumerator();
+			XmlNode xmlNodeTemp;
+			while(enumrator.MoveNext())
+			{
+				if (enumrator.Current == null) continue;
+				xmlNodeTemp = enumrator.Current as XmlNode;
+
+				System.Type nodeType = System.Type.GetType(string.Format("BehaviorTree.Node{0}", xmlNodeTemp.Name));
+				if (nodeType == null) continue;
+
+				var attrName = xmlNodeTemp.Attributes["Name"];
+
+				NodeBase newBTNode = System.Activator.CreateInstance(nodeType, attrName == null ? "None" : attrName.Value, this) as NodeBase;
+				if (newBTNode == null) continue;
+
+				btNode.AddChild(newBTNode);
+				GenerateNodeByXML(xmlNodeTemp, newBTNode);
+			}
+		}
 
 		public void Run()
 		{
