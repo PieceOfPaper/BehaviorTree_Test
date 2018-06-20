@@ -44,7 +44,9 @@ namespace BehaviorTree
 		protected NodeBase[] cachedChildNodes = null;
 		protected bool isChildNodesChanged = true;
 
-		protected NodeState _nodeState;
+		protected BehaviorTree baseTree;
+
+		protected NodeState _nodeState = NodeState.None;
 		public virtual NodeState nodeState
 		{
 			protected set
@@ -57,12 +59,19 @@ namespace BehaviorTree
 			}
 		}
 
+		public NodeBase() { }
 		public NodeBase(string nodeName)
 		{
 			this.nodeName = nodeName;
 		}
 
-		public virtual bool AddChild(NodeBase node, int index = -1)
+		public NodeBase(string nodeName, BehaviorTree baseTree)
+		{
+			this.nodeName = nodeName;
+			this.baseTree = baseTree;
+		}
+
+		public bool AddChild(NodeBase node, int index = -1)
 		{
 			if (childNodes == null) return false;
 			//if (childNodes.Contains(node)) return false;
@@ -71,12 +80,13 @@ namespace BehaviorTree
 			else childNodes.Insert(index, node);
 
 			node.parentNode = this;
+			node.baseTree = this.baseTree;
 			isChildNodesChanged = true;
 
 			return true;
 		}
 
-		public virtual bool RemoveChild(NodeBase node)
+		public bool RemoveChild(NodeBase node)
 		{
 			if (childNodes == null) return false;
 
@@ -89,24 +99,26 @@ namespace BehaviorTree
 			return childNodes.Remove(node);
 		}
 
-		public virtual void ClearChildren()
+		public void ClearChildren()
 		{
 			if (childNodes == null) return;
 
 			childNodes.ForEach(node =>
 			{
 				node.parentNode = null;
+				node.baseTree = null;
+				node.ClearChildren();
 			});
 			childNodes.Clear();
 		}
 
-		public virtual int GetChildrenCount()
+		public int GetChildrenCount()
 		{
 			if (childNodes == null) return 0;
 			return childNodes.Count;
 		}
 
-		public virtual NodeBase[] GetAllChildren()
+		public NodeBase[] GetAllChildren()
 		{
 			if (childNodes == null) return null;
 			if (isChildNodesChanged)
@@ -117,11 +129,27 @@ namespace BehaviorTree
 			return cachedChildNodes;
 		}
 
+		public void ResetChildrenState()
+		{
+			if (childNodes == null) return;
+			childNodes.ForEach(node =>
+			{
+				node.nodeState = NodeState.None;
+			});
+		}
+
 		public virtual IEnumerator RunningRoutine()
 		{
 			nodeState = NodeState.Running;
-			yield return null;
+			
+			var enumrator = childNodes.GetEnumerator();
+			while(enumrator.MoveNext())
+			{
+				yield return baseTree.StartCoroutine(enumrator.Current.RunningRoutine());
+			}
+
 			nodeState = NodeState.None;
+			ResetChildrenState();
 		}
 	}
 }

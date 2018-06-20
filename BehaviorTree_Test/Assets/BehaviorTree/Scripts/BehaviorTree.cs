@@ -19,26 +19,42 @@ namespace BehaviorTree
 			}
 		}
 
-		protected NodeBase _currentNode = null;
-		public NodeBase currentNode
+		protected bool _isRunning = false;
+		public bool isRunning
 		{
 			protected set
 			{
-				_currentNode = value;
+				_isRunning = value;
 			}
 			get
 			{
-				return _currentNode;
+				return _isRunning;
 			}
 		}
 
+		Coroutine runRoutine;
+
 		public void Run()
 		{
+			if (isRunning) return;
+			if (runRoutine != null) StopCoroutine(runRoutine);
+			runRoutine = StartCoroutine(RunRoutine());
 		}
 
-		IEnumerator RunRoutine()
+		public void Stop()
 		{
-			yield return null;
+			isRunning = false;
+			if (runRoutine != null) StopCoroutine(runRoutine);
+		}
+
+		protected IEnumerator RunRoutine()
+		{
+			isRunning = true;
+			while(rootNode != null)
+			{
+				yield return StartCoroutine(rootNode.RunningRoutine());
+			}
+			isRunning = false;
 		}
 	}
 }
