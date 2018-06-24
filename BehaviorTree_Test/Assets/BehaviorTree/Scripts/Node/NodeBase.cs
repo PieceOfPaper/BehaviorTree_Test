@@ -14,19 +14,6 @@ namespace BehaviorTree
 
 	public class NodeBase
 	{
-		protected string _nodeName;
-		public string nodeName
-		{
-			protected set
-			{
-				_nodeName = value;
-			}
-			get
-			{
-				return _nodeName;
-			}
-		}
-
 		protected NodeBase _parentNode;
 		public virtual NodeBase parentNode
 		{
@@ -59,6 +46,34 @@ namespace BehaviorTree
 			}
 		}
 
+
+		//Attributes Variant
+		protected string _nodeName;
+		public string nodeName
+		{
+			protected set
+			{
+				_nodeName = value;
+			}
+			get
+			{
+				return _nodeName;
+			}
+		}
+
+		protected bool _isReverse;
+		public virtual bool isReverse
+		{
+			protected set
+			{
+				_isReverse = value;
+			}
+			get
+			{
+				return _isReverse;
+			}
+		}
+
 		public NodeBase() { }
 		public NodeBase(string nodeName)
 		{
@@ -73,7 +88,12 @@ namespace BehaviorTree
 
 		public NodeBase(System.Xml.XmlAttributeCollection xmlAttributes, BehaviorTree baseTree)
 		{
-			this.nodeName = xmlAttributes["Name"].Value;
+			this.nodeName = xmlAttributes["Name"] != null ? 
+				xmlAttributes["Name"].Value : "none";
+			this.isReverse = 
+				xmlAttributes["IsReverse"] != null &&  xmlAttributes["IsReverse"].Value.ToLower().Contains("true") ? 
+				true : false;
+
 			this.baseTree = baseTree;
 		}
 
@@ -146,12 +166,12 @@ namespace BehaviorTree
 
 		public virtual IEnumerator RunningRoutine()
 		{
+			NodeBase[] nodes = GetAllChildren();
 			nodeState = NodeState.Running;
 			
-			var enumrator = childNodes.GetEnumerator();
-			while(enumrator.MoveNext())
+			for (int i = 0; i < nodes.Length; i ++)
 			{
-				yield return baseTree.StartCoroutine(enumrator.Current.RunningRoutine());
+				yield return baseTree.StartCoroutine( nodes[ isReverse ? nodes.Length - i - 1 : i ].RunningRoutine() );
 			}
 
 			nodeState = NodeState.None;

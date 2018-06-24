@@ -8,21 +8,22 @@ namespace BehaviorTree
 	{
 		public override IEnumerator RunningRoutine()
 		{
+			NodeBase[] nodes = GetAllChildren();
 			nodeState = NodeState.Running;
 			
-			var enumrator = childNodes.GetEnumerator();
-			while(enumrator.MoveNext())
+			for (int i = 0; i < nodes.Length; i ++)
 			{
-				yield return baseTree.StartCoroutine(enumrator.Current.RunningRoutine());
-				if (enumrator.Current.nodeState == NodeState.Success)
+				yield return baseTree.StartCoroutine( nodes[ isReverse ? nodes.Length - i - 1 : i ].RunningRoutine() );
+				if (nodes[ isReverse ? nodes.Length - i - 1 : i ].nodeState == NodeState.Success)
 				{
 					nodeState = NodeState.Success;
 					break;
 				}
 			}
+			
 			if (nodeState != NodeState.Success)
 				nodeState = NodeState.Fail;
-				
+
 			ResetChildrenState();
 		}
 	}
