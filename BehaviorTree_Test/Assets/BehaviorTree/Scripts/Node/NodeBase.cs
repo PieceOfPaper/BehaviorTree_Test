@@ -71,6 +71,12 @@ namespace BehaviorTree
 			this.baseTree = baseTree;
 		}
 
+		public NodeBase(System.Xml.XmlAttributeCollection xmlAttributes, BehaviorTree baseTree)
+		{
+			this.nodeName = xmlAttributes["Name"].Value;
+			this.baseTree = baseTree;
+		}
+
 		public bool AddChild(NodeBase node, int index = -1)
 		{
 			if (childNodes == null) return false;

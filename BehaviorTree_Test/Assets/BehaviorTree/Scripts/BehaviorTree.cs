@@ -54,9 +54,7 @@ namespace BehaviorTree
 				System.Type nodeType = System.Type.GetType(string.Format("BehaviorTree.Node{0}", xmlNodeTemp.Name));
 				if (nodeType == null) continue;
 
-				var attrName = xmlNodeTemp.Attributes["Name"];
-
-				NodeBase newBTNode = System.Activator.CreateInstance(nodeType, attrName == null ? "None" : attrName.Value, this) as NodeBase;
+				NodeBase newBTNode = System.Activator.CreateInstance(nodeType, xmlNodeTemp.Attributes, this) as NodeBase;
 				if (newBTNode == null) continue;
 
 				btNode.AddChild(newBTNode);
