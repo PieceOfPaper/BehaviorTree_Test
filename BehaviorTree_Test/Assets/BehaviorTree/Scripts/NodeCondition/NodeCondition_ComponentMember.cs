@@ -30,7 +30,7 @@ namespace BehaviorTree
 			SameAndLess,
 		}
 
-		public NodeCondition_ComponentField(System.Xml.XmlAttributeCollection xmlAttributes, BehaviorTree baseTree) : base(xmlAttributes, baseTree)
+		protected override void SetNodeByXmlAttributes(System.Xml.XmlAttributeCollection xmlAttributes)
 		{
 			if (xmlAttributes["Type"] != null &&
 				string.IsNullOrEmpty(xmlAttributes["Type"].Value) == false)
@@ -42,7 +42,7 @@ namespace BehaviorTree
 			var memberName = xmlAttributes["Field"] != null ? xmlAttributes["GetField"].Value : string.Empty;
 			if (m_TargetType != null &&
 				string.IsNullOrEmpty(memberName) == false)
-            {
+			{
 				m_TargetField = m_TargetType.GetField(memberName);
 			}
 
@@ -56,9 +56,9 @@ namespace BehaviorTree
 					m_CompareType = result;
 				}
 				else
-                {
-					switch(xmlAttributes["CompareType"].Value)
-                    {
+				{
+					switch (xmlAttributes["CompareType"].Value)
+					{
 						case "==":
 							m_CompareType = CompareType.Same;
 							break;
@@ -75,7 +75,7 @@ namespace BehaviorTree
 							m_CompareType = CompareType.SameAndLess;
 							break;
 					}
-                }
+				}
 			}
 
 			if (m_TargetField != null &&
@@ -87,7 +87,7 @@ namespace BehaviorTree
 			}
 		}
 
-        public override bool CheckCondition()
+		public override bool CheckCondition()
         {
 			if (m_TargetType == null) return false;
 			if (m_TargetField == null) return false;

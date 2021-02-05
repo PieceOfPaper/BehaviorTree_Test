@@ -96,6 +96,8 @@ namespace BehaviorTree
 				true : false;
 
 			this.baseTree = baseTree;
+
+			SetNodeByXmlAttributes(xmlAttributes);
 		}
 
 		public bool AddChild(NodeBase node, int index = -1)
@@ -166,7 +168,7 @@ namespace BehaviorTree
 		}
 
 
-
+		protected abstract void SetNodeByXmlAttributes(System.Xml.XmlAttributeCollection xmlAttributes);
 		public abstract IEnumerator RunningRoutine();
 	}
 }

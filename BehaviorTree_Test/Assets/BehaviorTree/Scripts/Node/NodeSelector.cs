@@ -1,11 +1,17 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Xml;
 using UnityEngine;
 
 namespace BehaviorTree
 {
 	public class NodeSelector : NodeBase
 	{
+		protected override void SetNodeByXmlAttributes(XmlAttributeCollection xmlAttributes)
+		{
+			// nothing
+		}
+
 		public override IEnumerator RunningRoutine()
 		{
 			NodeBase[] nodes = GetAllChildren();
@@ -26,5 +32,5 @@ namespace BehaviorTree
 
 			ResetChildrenState();
 		}
-	}
+    }
 }

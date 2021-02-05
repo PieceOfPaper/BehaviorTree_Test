@@ -20,15 +20,15 @@ namespace BehaviorTree
 		protected string methodName = string.Empty;
 		protected object sendValue = null;
 		
-		public NodeAction_SendMessage(System.Xml.XmlAttributeCollection xmlAttributes, BehaviorTree baseTree) : base(xmlAttributes, baseTree)
+		protected override void SetNodeByXmlAttributes(System.Xml.XmlAttributeCollection xmlAttributes)
 		{
 			this.actionType = ActionType.NoAction;
-			if (xmlAttributes["Type"] != null && 
+			if (xmlAttributes["Type"] != null &&
 				string.IsNullOrEmpty(xmlAttributes["Type"].Value) == false)
 			{
 				ActionType result;
-				if (System.Enum.TryParse< ActionType >(xmlAttributes["Type"].Value, out result))
-                {
+				if (System.Enum.TryParse<ActionType>(xmlAttributes["Type"].Value, out result))
+				{
 					this.actionType = result;
 				}
 			}
@@ -50,7 +50,6 @@ namespace BehaviorTree
 
 				sendValue = xmlAttributes["SendValue"].Value;
 			}
-
 		}
 
 		public override IEnumerator RunningRoutine()

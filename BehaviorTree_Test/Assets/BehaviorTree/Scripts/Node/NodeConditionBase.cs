@@ -6,11 +6,6 @@ namespace BehaviorTree
 { 
 	public abstract class NodeConditionBase : NodeBase
 	{
-		public NodeConditionBase(string nodeName) : base(nodeName) { }
-		public NodeConditionBase(string nodeName, BehaviorTree baseTree) : base(nodeName) { }
-		public NodeConditionBase(System.Xml.XmlAttributeCollection xmlAttributes, BehaviorTree baseTree) : base(xmlAttributes, baseTree) { }
-
-
 		public abstract bool CheckCondition();
 
 
