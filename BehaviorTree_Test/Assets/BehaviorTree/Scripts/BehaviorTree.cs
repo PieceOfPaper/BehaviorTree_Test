@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Xml;
@@ -7,39 +8,48 @@ namespace BehaviorTree
 {
 	public class BehaviorTree : MonoBehaviour
 	{
-		protected NodeBase _rootNode = null;
-		public NodeBase rootNode
-		{
-			protected set
+		[SerializeField] TextAsset m_XMLFile;
+		[SerializeField] bool m_RunOnEnabled = true;
+
+
+
+		protected static Dictionary<string, Type> m_CachedNodeTypes = new Dictionary<string, Type>();
+
+
+		public bool IsRunning => m_IsRunning;
+
+
+		protected NodeBase m_RootNode = null;
+		protected bool m_IsRunning = false;
+		protected Coroutine m_RunRoutine;
+
+
+        private void Awake()
+        {
+			if (m_XMLFile != null)
 			{
-				_rootNode = value;
-			}
-			get
-			{
-				return _rootNode;
+				XmlDocument xml = new XmlDocument();
+				xml.LoadXml(m_XMLFile.text);
+				GenerateNode(xml);
 			}
 		}
 
-		protected bool _isRunning = false;
-		public bool isRunning
-		{
-			protected set
-			{
-				_isRunning = value;
-			}
-			get
-			{
-				return _isRunning;
-			}
+        private void OnEnable()
+        {
+			if (m_RunOnEnabled == true)
+				Run();
+        }
+
+        private void OnDisable()
+        {
+			Stop();
 		}
 
-		Coroutine runRoutine;
 
-
-		public void GenerateNode(XmlDocument xml)
+        public void GenerateNode(XmlDocument xml)
 		{
-			rootNode = null;
-			GenerateNodeByXML(xml.FirstChild, rootNode);
+			m_RootNode = null;
+			GenerateNodeByXML(xml.FirstChild, m_RootNode);
 		}
 
 		void GenerateNodeByXML(XmlNode xmlNode, NodeBase btNode)
@@ -51,10 +61,10 @@ namespace BehaviorTree
 				if (enumrator.Current == null) continue;
 				xmlNodeTemp = enumrator.Current as XmlNode;
 
-				System.Type nodeType = System.Type.GetType(string.Format("BehaviorTree.Node{0}", xmlNodeTemp.Name));
+				Type nodeType = GetNodeType(xmlNodeTemp.Name);
 				if (nodeType == null) continue;
 
-				NodeBase newBTNode = System.Activator.CreateInstance(nodeType, xmlNodeTemp.Attributes, this) as NodeBase;
+				NodeBase newBTNode = Activator.CreateInstance(nodeType, xmlNodeTemp.Attributes, this) as NodeBase;
 				if (newBTNode == null) continue;
 
 				btNode.AddChild(newBTNode);
@@ -62,27 +72,37 @@ namespace BehaviorTree
 			}
 		}
 
+		Type GetNodeType(string nodeTypeName)
+        {
+			if (m_CachedNodeTypes.ContainsKey(nodeTypeName) == false)
+				m_CachedNodeTypes.Add(nodeTypeName, Type.GetType(string.Format("BehaviorTree.Node{0}", nodeTypeName)));
+			return m_CachedNodeTypes[nodeTypeName];
+		}
+
+
+
 		public void Run()
 		{
-			if (isRunning) return;
-			if (runRoutine != null) StopCoroutine(runRoutine);
-			runRoutine = StartCoroutine(RunRoutine());
+			if (m_IsRunning) return;
+			if (m_RootNode == null) return;
+			if (m_RunRoutine != null) StopCoroutine(m_RunRoutine);
+			m_RunRoutine = StartCoroutine(RunRoutine());
 		}
 
 		public void Stop()
 		{
-			isRunning = false;
-			if (runRoutine != null) StopCoroutine(runRoutine);
+			m_IsRunning = false;
+			if (m_RunRoutine != null) StopCoroutine(m_RunRoutine);
 		}
 
-		protected IEnumerator RunRoutine()
+		IEnumerator RunRoutine()
 		{
-			isRunning = true;
-			while(rootNode != null)
+			m_IsRunning = true;
+			while(m_RootNode != null)
 			{
-				yield return StartCoroutine(rootNode.RunningRoutine());
+				yield return StartCoroutine(m_RootNode.RunningRoutine());
 			}
-			isRunning = false;
+			m_IsRunning = false;
 		}
 	}
 }

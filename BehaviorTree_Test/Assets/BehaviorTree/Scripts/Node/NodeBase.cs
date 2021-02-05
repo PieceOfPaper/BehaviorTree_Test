@@ -12,7 +12,7 @@ namespace BehaviorTree
 		Running,
 	}
 
-	public class NodeBase
+	public abstract class NodeBase
 	{
 		protected NodeBase _parentNode;
 		public virtual NodeBase parentNode
@@ -75,6 +75,7 @@ namespace BehaviorTree
 		}
 
 		public NodeBase() { }
+
 		public NodeBase(string nodeName)
 		{
 			this.nodeName = nodeName;
@@ -164,18 +165,8 @@ namespace BehaviorTree
 			});
 		}
 
-		public virtual IEnumerator RunningRoutine()
-		{
-			NodeBase[] nodes = GetAllChildren();
-			nodeState = NodeState.Running;
-			
-			for (int i = 0; i < nodes.Length; i ++)
-			{
-				yield return baseTree.StartCoroutine( nodes[ isReverse ? nodes.Length - i - 1 : i ].RunningRoutine() );
-			}
 
-			nodeState = NodeState.None;
-			ResetChildrenState();
-		}
+
+		public abstract IEnumerator RunningRoutine();
 	}
 }
