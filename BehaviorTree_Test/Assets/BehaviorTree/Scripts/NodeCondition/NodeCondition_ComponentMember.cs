@@ -30,8 +30,10 @@ namespace BehaviorTree
 			SameAndLess,
 		}
 
-		protected override void SetNodeByXmlAttributes(System.Xml.XmlAttributeCollection xmlAttributes)
+		public override void Setup(System.Xml.XmlAttributeCollection xmlAttributes, BehaviorTree baseTree)
 		{
+			base.Setup(xmlAttributes, baseTree);
+
 			if (xmlAttributes["Type"] != null &&
 				string.IsNullOrEmpty(xmlAttributes["Type"].Value) == false)
 			{

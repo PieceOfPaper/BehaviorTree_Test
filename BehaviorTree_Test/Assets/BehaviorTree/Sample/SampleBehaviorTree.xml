@@ -1,0 +1,5 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<BehaviorTree>
+  <Action_AnimatorState StateName="Run" Time="1"></Action_AnimatorState>
+  <Action_AnimatorState StateName="Idle" Time="1"></Action_AnimatorState>
+</BehaviorTree>

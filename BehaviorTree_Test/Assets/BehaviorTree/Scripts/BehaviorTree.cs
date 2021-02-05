@@ -48,8 +48,10 @@ namespace BehaviorTree
 
         public void GenerateNode(XmlDocument xml)
 		{
-			m_RootNode = null;
-			GenerateNodeByXML(xml.FirstChild, m_RootNode);
+			var rootXmlNode = xml.LastChild;
+			m_RootNode = new NodeRoot();
+			m_RootNode.Setup(rootXmlNode.Attributes, this);
+			GenerateNodeByXML(rootXmlNode, m_RootNode);
 		}
 
 		void GenerateNodeByXML(XmlNode xmlNode, NodeBase btNode)
@@ -61,12 +63,19 @@ namespace BehaviorTree
 				if (enumrator.Current == null) continue;
 				xmlNodeTemp = enumrator.Current as XmlNode;
 
+				//if (xmlNodeTemp.Name == "BehaviorTree")
+				//{
+				//	GenerateNodeByXML(xmlNodeTemp, btNode);
+				//	continue;
+    //            }
+
 				Type nodeType = GetNodeType(xmlNodeTemp.Name);
 				if (nodeType == null) continue;
 
-				NodeBase newBTNode = Activator.CreateInstance(nodeType, xmlNodeTemp.Attributes, this) as NodeBase;
+				NodeBase newBTNode = Activator.CreateInstance(nodeType) as NodeBase;
 				if (newBTNode == null) continue;
 
+				newBTNode.Setup(xmlNodeTemp.Attributes, this);
 				btNode.AddChild(newBTNode);
 				GenerateNodeByXML(xmlNodeTemp, newBTNode);
 			}

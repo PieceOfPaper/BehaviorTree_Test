@@ -7,11 +7,6 @@ namespace BehaviorTree
 {
 	public class NodeSequence : NodeBase
 	{
-		protected override void SetNodeByXmlAttributes(XmlAttributeCollection xmlAttributes)
-		{
-			// nothing
-		}
-
 		public override IEnumerator RunningRoutine()
 		{
 			NodeBase[] nodes = GetAllChildren();

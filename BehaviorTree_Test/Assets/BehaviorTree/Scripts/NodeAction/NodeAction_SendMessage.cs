@@ -19,9 +19,11 @@ namespace BehaviorTree
 		protected string className = string.Empty;
 		protected string methodName = string.Empty;
 		protected object sendValue = null;
-		
-		protected override void SetNodeByXmlAttributes(System.Xml.XmlAttributeCollection xmlAttributes)
+
+		public override void Setup(System.Xml.XmlAttributeCollection xmlAttributes, BehaviorTree baseTree)
 		{
+			base.Setup(xmlAttributes, baseTree);
+
 			this.actionType = ActionType.NoAction;
 			if (xmlAttributes["Type"] != null &&
 				string.IsNullOrEmpty(xmlAttributes["Type"].Value) == false)

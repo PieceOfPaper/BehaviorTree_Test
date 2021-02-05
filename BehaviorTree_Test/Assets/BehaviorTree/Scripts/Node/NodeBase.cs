@@ -74,31 +74,6 @@ namespace BehaviorTree
 			}
 		}
 
-		public NodeBase() { }
-
-		public NodeBase(string nodeName)
-		{
-			this.nodeName = nodeName;
-		}
-
-		public NodeBase(string nodeName, BehaviorTree baseTree)
-		{
-			this.nodeName = nodeName;
-			this.baseTree = baseTree;
-		}
-
-		public NodeBase(System.Xml.XmlAttributeCollection xmlAttributes, BehaviorTree baseTree)
-		{
-			this.nodeName = xmlAttributes["Name"] != null ? 
-				xmlAttributes["Name"].Value : "none";
-			this.isReverse = 
-				xmlAttributes["IsReverse"] != null &&  xmlAttributes["IsReverse"].Value.ToLower().Contains("true") ? 
-				true : false;
-
-			this.baseTree = baseTree;
-
-			SetNodeByXmlAttributes(xmlAttributes);
-		}
 
 		public bool AddChild(NodeBase node, int index = -1)
 		{
@@ -168,7 +143,17 @@ namespace BehaviorTree
 		}
 
 
-		protected abstract void SetNodeByXmlAttributes(System.Xml.XmlAttributeCollection xmlAttributes);
+		public virtual void Setup(System.Xml.XmlAttributeCollection xmlAttributes, BehaviorTree baseTree)
+		{
+			this.nodeName = xmlAttributes["Name"] != null ?
+				xmlAttributes["Name"].Value : "none";
+			this.isReverse =
+				xmlAttributes["IsReverse"] != null && xmlAttributes["IsReverse"].Value.ToLower().Contains("true") ?
+				true : false;
+
+			this.baseTree = baseTree;
+		}
+
 		public abstract IEnumerator RunningRoutine();
 	}
 }
