@@ -1,3 +1,0 @@
-				Important Note:
-
-Activate Unity Ads Service and uncomment the code in UnityAdsScript to show unity ads
