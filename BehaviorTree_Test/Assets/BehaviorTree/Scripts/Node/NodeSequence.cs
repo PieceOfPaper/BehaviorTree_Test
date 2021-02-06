@@ -14,8 +14,8 @@ namespace BehaviorTree
 			
 			for (int i = 0; i < nodes.Length; i ++)
 			{
-				yield return baseTree.StartCoroutine( nodes[ isReverse ? nodes.Length - i - 1 : i ].RunningRoutine() );
-				if (nodes[ isReverse ? nodes.Length - i - 1 : i ].nodeState == NodeState.Fail)
+				yield return baseTree.StartCoroutine( nodes[IsReverse ? nodes.Length - i - 1 : i ].RunningRoutine() );
+				if (nodes[IsReverse ? nodes.Length - i - 1 : i ].nodeState == NodeState.Fail)
 				{
 					nodeState = NodeState.Fail;
 					break;

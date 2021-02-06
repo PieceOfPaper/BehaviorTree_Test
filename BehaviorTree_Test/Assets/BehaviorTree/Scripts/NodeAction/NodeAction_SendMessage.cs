@@ -15,44 +15,34 @@ namespace BehaviorTree
 			Max,
 		}
 
-		protected ActionType actionType = ActionType.NoAction;
-		protected string className = string.Empty;
-		protected string methodName = string.Empty;
-		protected object sendValue = null;
+		[NodeAttribute("Type", NodeAttributeOptionType.Required)] ActionType actionType = ActionType.NoAction;
+		[NodeAttribute("MethodName", NodeAttributeOptionType.Required)] string methodName;
+		[NodeAttribute("SendValue", NodeAttributeOptionType.Optional)] string sendValue;
+
+		object value = null;
 
 		public override void Setup(System.Xml.XmlAttributeCollection xmlAttributes, BehaviorTree baseTree)
 		{
 			base.Setup(xmlAttributes, baseTree);
 
-			this.actionType = ActionType.NoAction;
-			if (xmlAttributes["Type"] != null &&
-				string.IsNullOrEmpty(xmlAttributes["Type"].Value) == false)
-			{
-				ActionType result;
-				if (System.Enum.TryParse<ActionType>(xmlAttributes["Type"].Value, out result))
+            if (sendValue != null)
+            {
+                int ivalue;
+                float fvalue;
+                if (int.TryParse(sendValue, out ivalue))
+                {
+					value = ivalue;
+                }
+                else if (float.TryParse(sendValue, out fvalue))
+                {
+					value = fvalue;
+                }
+				else
 				{
-					this.actionType = result;
+					value = sendValue;
 				}
-			}
-
-			this.methodName = xmlAttributes["MethodName"] != null ? xmlAttributes["MethodName"].Value : string.Empty;
-
-			if (xmlAttributes["SendValue"] != null)
-			{
-				int ivalue;
-				float fvalue;
-				if (int.TryParse(xmlAttributes["SendValue"].Value, out ivalue))
-				{
-					sendValue = ivalue;
-				}
-				else if (float.TryParse(xmlAttributes["SendValue"].Value, out fvalue))
-				{
-					sendValue = fvalue;
-				}
-
-				sendValue = xmlAttributes["SendValue"].Value;
-			}
-		}
+            }
+        }
 
 		public override IEnumerator RunningRoutine()
 		{
@@ -61,15 +51,24 @@ namespace BehaviorTree
 			switch(actionType)
 			{
 				case ActionType.SendMessage:
-					baseTree.SendMessage(methodName, sendValue);
+					if (value == null)
+						baseTree.SendMessage(methodName);
+					else
+						baseTree.SendMessage(methodName, value);
 					nodeState = NodeState.Success;
 					break;
 				case ActionType.BrodcastMessage:
-					baseTree.BroadcastMessage(methodName, sendValue);
+					if (value == null)
+						baseTree.BroadcastMessage(methodName);
+					else
+						baseTree.BroadcastMessage(methodName, value);
 					nodeState = NodeState.Success;
 					break;
 				case ActionType.SendMessageUpwards:
-					baseTree.SendMessageUpwards(methodName, sendValue);
+					if (value == null)
+						baseTree.SendMessageUpwards(methodName);
+					else
+						baseTree.SendMessageUpwards(methodName, value);
 					nodeState = NodeState.Success;
 					break;
 				default:

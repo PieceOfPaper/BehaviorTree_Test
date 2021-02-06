@@ -12,7 +12,7 @@ namespace BehaviorTree
 			nodeState = NodeState.Running;
 
 			for (int i = 0; i < nodes.Length; i++)
-				yield return baseTree.StartCoroutine(nodes[isReverse ? nodes.Length - i - 1 : i].RunningRoutine());
+				yield return baseTree.StartCoroutine(nodes[IsReverse ? nodes.Length - i - 1 : i].RunningRoutine());
 
 			nodeState = NodeState.Success;
 			ResetChildrenState();

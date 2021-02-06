@@ -8,6 +8,11 @@ namespace BehaviorTree
 {
     public class NodeCondition_ComponentField : NodeConditionBase
 	{
+		[NodeAttribute("Type", NodeAttributeOptionType.Required)] string m_Type;
+		[NodeAttribute("Field", NodeAttributeOptionType.Required)] string m_Field;
+		[NodeAttribute("CompareType", NodeAttributeOptionType.Required)] string m_CompareType;
+		[NodeAttribute("CompareValue", NodeAttributeOptionType.Required)] string m_CompareValue;
+
 		Type m_TargetType;
 		Component m_TargetComponent;
 
@@ -15,8 +20,8 @@ namespace BehaviorTree
 		PropertyInfo m_TargetProperty;
 		MethodInfo m_TargetMethod;
 
-		CompareType m_CompareType;
-		object m_CompareValue;
+		CompareType m_ParsedCompareType;
+		object m_ParsedCompareValue;
 
 
 		public enum CompareType
@@ -36,59 +41,52 @@ namespace BehaviorTree
 		{
 			base.Setup(xmlAttributes, baseTree);
 
-			if (xmlAttributes["Type"] != null &&
-				string.IsNullOrEmpty(xmlAttributes["Type"].Value) == false)
+			if (string.IsNullOrEmpty(m_Type) == false)
 			{
-				m_TargetType = Type.GetType(xmlAttributes["Type"].Value);
+				m_TargetType = Type.GetType(m_Type);
 				if (m_TargetType != null) m_TargetComponent = baseTree.GetComponent(m_TargetType);
 			}
 
-			var fieldName = xmlAttributes["Field"] != null ? xmlAttributes["Field"].Value : string.Empty;
-			if (m_TargetType != null &&
-				string.IsNullOrEmpty(fieldName) == false)
+			if (string.IsNullOrEmpty(m_Field) == false)
 			{
-				m_TargetField = m_TargetType.GetField(fieldName);
-				m_TargetProperty = m_TargetType.GetProperty(fieldName);
-				m_TargetMethod = m_TargetType.GetMethod(fieldName);
+				m_TargetField = m_TargetType.GetField(m_Field);
+				m_TargetProperty = m_TargetType.GetProperty(m_Field);
+				m_TargetMethod = m_TargetType.GetMethod(m_Field);
 			}
 
-			m_CompareType = CompareType.Unknown;
-			if (xmlAttributes["CompareType"] != null &&
-				string.IsNullOrEmpty(xmlAttributes["CompareType"].Value) == false)
+			if (string.IsNullOrEmpty(m_CompareType) == false)
 			{
 				CompareType result;
-				if (Enum.TryParse<CompareType>(xmlAttributes["CompareType"].Value, out result))
+				if (Enum.TryParse<CompareType>(m_CompareType, out result))
 				{
-					m_CompareType = result;
+					m_ParsedCompareType = result;
 				}
 				else
 				{
 					switch (xmlAttributes["CompareType"].Value)
 					{
 						case "==":
-							m_CompareType = CompareType.Same;
+							m_ParsedCompareType = CompareType.Same;
 							break;
 						case ">":
-							m_CompareType = CompareType.Grater;
+							m_ParsedCompareType = CompareType.Grater;
 							break;
 						case "<":
-							m_CompareType = CompareType.Less;
+							m_ParsedCompareType = CompareType.Less;
 							break;
 						case ">=":
-							m_CompareType = CompareType.SameAndGrater;
+							m_ParsedCompareType = CompareType.SameAndGrater;
 							break;
 						case "<=":
-							m_CompareType = CompareType.SameAndLess;
+							m_ParsedCompareType = CompareType.SameAndLess;
 							break;
 					}
 				}
 			}
 
-			if (xmlAttributes["CompareValue"] != null &&
-				string.IsNullOrEmpty(xmlAttributes["CompareValue"].Value) == false)
+			if (string.IsNullOrEmpty(m_CompareValue) == false)
 			{
 				Type fieldType = null;
-				MethodInfo parseMethod = null;
 
 				if (m_TargetField != null)
 					fieldType = m_TargetField.FieldType;
@@ -97,15 +95,14 @@ namespace BehaviorTree
 				else if (m_TargetMethod != null && m_TargetMethod.ReturnType != null && m_TargetMethod.ReturnType != typeof(void))
 					fieldType = m_TargetMethod.ReturnType;
 
-				parseMethod = fieldType == null ? null : fieldType.GetMethod("Parse", new Type[] { typeof(string) });
-				m_CompareValue = fieldType == null || parseMethod == null ? null : parseMethod.Invoke(fieldType, new object[] { xmlAttributes["CompareValue"].Value });
+				m_ParsedCompareValue = Util.Parse(fieldType, m_CompareValue);
 			}
 		}
 
 		public override bool CheckCondition()
         {
 			if (m_TargetType == null) return false;
-			if (m_CompareValue == null) return false;
+			if (m_ParsedCompareValue == null) return false;
 
 			int compareResult = 0;
 
@@ -115,7 +112,7 @@ namespace BehaviorTree
                 if (fieldValue != null &&
                     fieldValue is IComparable)
                 {
-                    compareResult = ((IComparable)fieldValue).CompareTo(m_CompareValue);
+                    compareResult = ((IComparable)fieldValue).CompareTo(m_ParsedCompareValue);
                 }
             }
 			else if (m_TargetProperty != null)
@@ -124,7 +121,7 @@ namespace BehaviorTree
 				if (propertyValue != null &&
 					propertyValue is IComparable)
 				{
-					compareResult = ((IComparable)propertyValue).CompareTo(m_CompareValue);
+					compareResult = ((IComparable)propertyValue).CompareTo(m_ParsedCompareValue);
 				}
 			}
 			else if (m_TargetMethod != null)
@@ -133,11 +130,11 @@ namespace BehaviorTree
 				if (methodValue != null &&
 					methodValue is IComparable)
 				{
-					compareResult = ((IComparable)methodValue).CompareTo(m_CompareValue);
+					compareResult = ((IComparable)methodValue).CompareTo(m_ParsedCompareValue);
 				}
 			}
 
-			switch (m_CompareType)
+			switch (m_ParsedCompareType)
             {
 				case CompareType.Same: return compareResult == 0;
 				case CompareType.Grater: return compareResult > 0;
