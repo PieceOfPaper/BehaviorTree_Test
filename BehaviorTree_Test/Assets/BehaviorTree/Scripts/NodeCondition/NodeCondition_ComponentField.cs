@@ -12,6 +12,8 @@ namespace BehaviorTree
 		Component m_TargetComponent;
 
 		FieldInfo m_TargetField;
+		PropertyInfo m_TargetProperty;
+		MethodInfo m_TargetMethod;
 
 		CompareType m_CompareType;
 		object m_CompareValue;
@@ -41,11 +43,13 @@ namespace BehaviorTree
 				if (m_TargetType != null) m_TargetComponent = baseTree.GetComponent(m_TargetType);
 			}
 
-			var memberName = xmlAttributes["Field"] != null ? xmlAttributes["GetField"].Value : string.Empty;
+			var fieldName = xmlAttributes["Field"] != null ? xmlAttributes["Field"].Value : string.Empty;
 			if (m_TargetType != null &&
-				string.IsNullOrEmpty(memberName) == false)
+				string.IsNullOrEmpty(fieldName) == false)
 			{
-				m_TargetField = m_TargetType.GetField(memberName);
+				m_TargetField = m_TargetType.GetField(fieldName);
+				m_TargetProperty = m_TargetType.GetProperty(fieldName);
+				m_TargetMethod = m_TargetType.GetMethod(fieldName);
 			}
 
 			m_CompareType = CompareType.Unknown;
@@ -80,27 +84,57 @@ namespace BehaviorTree
 				}
 			}
 
-			if (m_TargetField != null &&
-				xmlAttributes["CompareValue"] != null &&
+			if (xmlAttributes["CompareValue"] != null &&
 				string.IsNullOrEmpty(xmlAttributes["CompareValue"].Value) == false)
 			{
-				var parseMethod = m_TargetField.FieldType.GetMethod("Parse");
-				m_CompareValue = parseMethod.Invoke(m_TargetField.FieldType, new object[] { xmlAttributes["CompareValue"].Value });
+				Type fieldType = null;
+				MethodInfo parseMethod = null;
+
+				if (m_TargetField != null)
+					fieldType = m_TargetField.FieldType;
+				else if (m_TargetProperty != null)
+					fieldType = m_TargetProperty.PropertyType;
+				else if (m_TargetMethod != null && m_TargetMethod.ReturnType != null && m_TargetMethod.ReturnType != typeof(void))
+					fieldType = m_TargetMethod.ReturnType;
+
+				parseMethod = fieldType == null ? null : fieldType.GetMethod("Parse", new Type[] { typeof(string) });
+				m_CompareValue = fieldType == null || parseMethod == null ? null : parseMethod.Invoke(fieldType, new object[] { xmlAttributes["CompareValue"].Value });
 			}
 		}
 
 		public override bool CheckCondition()
         {
 			if (m_TargetType == null) return false;
-			if (m_TargetField == null) return false;
 			if (m_CompareValue == null) return false;
 
 			int compareResult = 0;
-			var fieldValue = m_TargetField.GetValue(m_TargetComponent);
-			if (fieldValue != null && 
-				fieldValue is IComparable)
+
+            if (m_TargetField != null)
             {
-				compareResult = ((IComparable)fieldValue).CompareTo(m_CompareValue);
+                var fieldValue = m_TargetField.GetValue(m_TargetComponent);
+                if (fieldValue != null &&
+                    fieldValue is IComparable)
+                {
+                    compareResult = ((IComparable)fieldValue).CompareTo(m_CompareValue);
+                }
+            }
+			else if (m_TargetProperty != null)
+			{
+				var propertyValue = m_TargetProperty.GetValue(m_TargetComponent);
+				if (propertyValue != null &&
+					propertyValue is IComparable)
+				{
+					compareResult = ((IComparable)propertyValue).CompareTo(m_CompareValue);
+				}
+			}
+			else if (m_TargetMethod != null)
+			{
+				var methodValue = m_TargetMethod.Invoke(m_TargetComponent, null);
+				if (methodValue != null &&
+					methodValue is IComparable)
+				{
+					compareResult = ((IComparable)methodValue).CompareTo(m_CompareValue);
+				}
 			}
 
 			switch (m_CompareType)

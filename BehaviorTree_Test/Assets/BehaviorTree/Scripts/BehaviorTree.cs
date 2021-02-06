@@ -13,9 +13,6 @@ namespace BehaviorTree
 
 
 
-		protected static Dictionary<string, Type> m_CachedNodeTypes = new Dictionary<string, Type>();
-
-
 		public bool IsRunning => m_IsRunning;
 
 
@@ -51,44 +48,8 @@ namespace BehaviorTree
 			var rootXmlNode = xml.LastChild;
 			m_RootNode = new NodeRoot();
 			m_RootNode.Setup(rootXmlNode.Attributes, this);
-			GenerateNodeByXML(rootXmlNode, m_RootNode);
+			Util.GenerateNodeByXML(this, rootXmlNode, m_RootNode);
 		}
-
-		void GenerateNodeByXML(XmlNode xmlNode, NodeBase btNode)
-		{
-			var enumrator = xmlNode.GetEnumerator();
-			XmlNode xmlNodeTemp;
-			while(enumrator.MoveNext())
-			{
-				if (enumrator.Current == null) continue;
-				xmlNodeTemp = enumrator.Current as XmlNode;
-
-				//if (xmlNodeTemp.Name == "BehaviorTree")
-				//{
-				//	GenerateNodeByXML(xmlNodeTemp, btNode);
-				//	continue;
-    //            }
-
-				Type nodeType = GetNodeType(xmlNodeTemp.Name);
-				if (nodeType == null) continue;
-
-				NodeBase newBTNode = Activator.CreateInstance(nodeType) as NodeBase;
-				if (newBTNode == null) continue;
-
-				newBTNode.Setup(xmlNodeTemp.Attributes, this);
-				btNode.AddChild(newBTNode);
-				GenerateNodeByXML(xmlNodeTemp, newBTNode);
-			}
-		}
-
-		Type GetNodeType(string nodeTypeName)
-        {
-			if (m_CachedNodeTypes.ContainsKey(nodeTypeName) == false)
-				m_CachedNodeTypes.Add(nodeTypeName, Type.GetType(string.Format("BehaviorTree.Node{0}", nodeTypeName)));
-			return m_CachedNodeTypes[nodeTypeName];
-		}
-
-
 
 		public void Run()
 		{

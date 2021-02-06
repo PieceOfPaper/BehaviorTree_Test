@@ -1,5 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <BehaviorTree>
-  <Action_AnimatorState StateName="Run" Time="1"></Action_AnimatorState>
   <Action_AnimatorState StateName="Idle" Time="1"></Action_AnimatorState>
+  <Selector>
+    <Condition_ComponentField Type="SampleRobotKyle" Field="AliveTime" CompareType=">=" CompareValue="10">
+      <Action_AnimatorState StateName="Sprint" Time="1"></Action_AnimatorState>
+    </Condition_ComponentField>
+    <Action_AnimatorState StateName="Run" Time="1"></Action_AnimatorState>
+</Selector>
 </BehaviorTree>
