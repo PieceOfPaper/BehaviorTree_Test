@@ -161,7 +161,7 @@ namespace BehaviorTree
 					string.IsNullOrEmpty(xmlAttributes[nodeAttr.Name].Value) == true)
                 {
 					if (nodeAttr.Option == NodeAttributeOptionType.Required)
-						Debug.LogErrorFormat("[{0}] Require Attribute - {1}", GetType().Name, nodeAttr.Name);
+						Debug.LogErrorFormat("[BehaviorTree.{0}] Require Attribute - {1}", GetType().Name, nodeAttr.Name);
 					continue;
                 }
 
