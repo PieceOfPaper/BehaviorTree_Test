@@ -45,10 +45,7 @@ namespace BehaviorTree
 
         public void GenerateNode(XmlDocument xml)
 		{
-			var rootXmlNode = xml.LastChild;
-			m_RootNode = new NodeRoot();
-			m_RootNode.Setup(rootXmlNode.Attributes, this);
-			Util.GenerateNodeByXML(this, rootXmlNode, m_RootNode);
+			m_RootNode = Util.GenerateNodeByXml(this, xml);
 		}
 
 		public void Run()

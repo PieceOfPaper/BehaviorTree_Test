@@ -13,8 +13,16 @@ namespace BehaviorTree
 		static Dictionary<Type, MethodInfo> m_CachedParseMethods = new Dictionary<Type, MethodInfo>();
 
 
+		public static NodeBase GenerateNodeByXml(in BehaviorTree baseTree, in XmlDocument xml)
+		{
+			var rootXmlNode = xml.LastChild;
+			var rootNode = new NodeRoot();
+			rootNode.Setup(rootXmlNode.Attributes, baseTree);
+			GenerateNodeByXmlRecusively(baseTree, rootXmlNode, rootNode);
+			return rootNode;
+		}
 
-		public static void GenerateNodeByXML(BehaviorTree baseTree, XmlNode xmlNode, NodeBase btNode)
+		static void GenerateNodeByXmlRecusively(BehaviorTree baseTree, XmlNode xmlNode, NodeBase btNode)
 		{
 			var enumrator = xmlNode.GetEnumerator();
 			XmlNode xmlNodeTemp;
@@ -31,7 +39,7 @@ namespace BehaviorTree
 
 				newBTNode.Setup(xmlNodeTemp.Attributes, baseTree);
 				btNode.AddChild(newBTNode);
-				GenerateNodeByXML(baseTree, xmlNodeTemp, newBTNode);
+				GenerateNodeByXmlRecusively(baseTree, xmlNodeTemp, newBTNode);
 			}
 		}
 
