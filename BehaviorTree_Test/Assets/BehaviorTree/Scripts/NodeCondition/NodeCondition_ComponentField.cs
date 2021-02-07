@@ -44,7 +44,7 @@ namespace BehaviorTree
 			if (string.IsNullOrEmpty(m_Type) == false)
 			{
 				m_TargetType = Type.GetType(m_Type);
-				if (m_TargetType != null) m_TargetComponent = baseTree.GetComponent(m_TargetType);
+				if (m_TargetType != null) m_TargetComponent = baseTree == null ? null : baseTree.GetComponent(m_TargetType);
 			}
 
 			if (string.IsNullOrEmpty(m_Field) == false)

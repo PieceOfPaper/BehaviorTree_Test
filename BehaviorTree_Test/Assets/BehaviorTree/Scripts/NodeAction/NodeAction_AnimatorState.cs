@@ -19,7 +19,7 @@ namespace BehaviorTree
         {
             base.Setup(xmlAttributes, baseTree);
 
-            m_Animator = baseTree.GetComponentInChildren<Animator>();
+            m_Animator = baseTree == null ? null : baseTree.GetComponentInChildren<Animator>();
             m_StateHash = Animator.StringToHash(m_StateName);
         }
 

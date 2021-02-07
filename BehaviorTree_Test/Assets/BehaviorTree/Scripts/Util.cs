@@ -13,6 +13,23 @@ namespace BehaviorTree
 		static Dictionary<Type, MethodInfo> m_CachedParseMethods = new Dictionary<Type, MethodInfo>();
 
 
+		public static NodeBase GenerateNodeByXml(in TextAsset textAsset)
+		{
+			return GenerateNodeByXml(null, textAsset);
+		}
+
+		public static NodeBase GenerateNodeByXml(in BehaviorTree baseTree, in TextAsset textAsset)
+		{
+			XmlDocument xml = new XmlDocument();
+			xml.LoadXml(textAsset.text);
+			return GenerateNodeByXml(baseTree, xml);
+		}
+
+		public static NodeBase GenerateNodeByXml(in XmlDocument xml)
+		{
+			return GenerateNodeByXml(null, xml);
+		}
+
 		public static NodeBase GenerateNodeByXml(in BehaviorTree baseTree, in XmlDocument xml)
 		{
 			var rootXmlNode = xml.LastChild;
@@ -40,6 +57,44 @@ namespace BehaviorTree
 				newBTNode.Setup(xmlNodeTemp.Attributes, baseTree);
 				btNode.AddChild(newBTNode);
 				GenerateNodeByXmlRecusively(baseTree, xmlNodeTemp, newBTNode);
+			}
+		}
+
+		public static XmlDocument ConvertToXml(this NodeBase node)
+        {
+			XmlDocument xml = new XmlDocument();
+			ConvertToXmlRecusively(xml, xml, node);
+			return xml;
+		}
+
+		static void ConvertToXmlRecusively(XmlDocument xmlDocument, XmlNode xmlNode, NodeBase node)
+		{
+			var type = node.GetType();
+			var newXmlNode = xmlDocument.CreateElement(type.Name.Replace("BehaviorTree.Node", ""));
+
+			var fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+			for (int i = 0; i < fields.Length; i++)
+			{
+				object[] attributes = fields[i].GetCustomAttributes(typeof(NodeAttribute), true);
+				if (attributes == null || attributes.Length == 0) continue;
+
+				NodeAttribute nodeAttr = attributes[0] as NodeAttribute;
+				if (nodeAttr == null) continue;
+
+				object fieldValue = fields[i].GetValue(node);
+				if (fieldValue == null) continue;
+
+				XmlAttribute xmlAttr = xmlDocument.CreateAttribute(nodeAttr.Name);
+				xmlAttr.Value = fieldValue.ToString();
+				newXmlNode.Attributes.Append(xmlAttr);
+			}
+			xmlNode.AppendChild(newXmlNode);
+
+			var childNodes = node.GetAllChildren();
+			for (int i = 0; i < childNodes.Length; i ++)
+            {
+				if (childNodes[i] == null) continue;
+				ConvertToXmlRecusively(xmlDocument, newXmlNode, childNodes[i]);
 			}
 		}
 
