@@ -10,6 +10,7 @@ namespace BehaviorTree
     public static class Util
 	{
 		static Dictionary<string, Type> m_CachedNodeTypes = new Dictionary<string, Type>();
+		static Dictionary<Type, MethodInfo> m_CachedParseMethods = new Dictionary<Type, MethodInfo>();
 
 
 
@@ -55,7 +56,12 @@ namespace BehaviorTree
             }
 			else
 			{
-				MethodInfo parseMethod = type.GetMethod("Parse", new Type[] { typeof(string) });
+				MethodInfo parseMethod = null;
+
+				if (m_CachedParseMethods.ContainsKey(type) == false)
+					m_CachedParseMethods.Add(type, type.GetMethod("Parse", new Type[] { typeof(string) }));
+
+				parseMethod = m_CachedParseMethods[type];
 				if (parseMethod == null) return null;
 
 				return parseMethod.Invoke(type, new object[] { str });
