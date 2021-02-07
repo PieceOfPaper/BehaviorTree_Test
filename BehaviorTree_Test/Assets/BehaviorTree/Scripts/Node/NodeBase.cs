@@ -157,8 +157,13 @@ namespace BehaviorTree
 				NodeAttribute nodeAttr = attributes[0] as NodeAttribute;
 				if (nodeAttr == null) continue;
 
-				if (xmlAttributes[nodeAttr.Name] == null) continue;
-				if (string.IsNullOrEmpty(xmlAttributes[nodeAttr.Name].Value) == true) continue;
+				if (xmlAttributes[nodeAttr.Name] == null ||
+					string.IsNullOrEmpty(xmlAttributes[nodeAttr.Name].Value) == true)
+                {
+					if (nodeAttr.Option == NodeAttributeOptionType.Required)
+						Debug.LogErrorFormat("[{0}] Require Attribute - {1}", GetType().Name, nodeAttr.Name);
+					continue;
+                }
 
 				fields[i].SetValue(this, Util.Parse(fields[i].FieldType, xmlAttributes[nodeAttr.Name].Value));
 			}
