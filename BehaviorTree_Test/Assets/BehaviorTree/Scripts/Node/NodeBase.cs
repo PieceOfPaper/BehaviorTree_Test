@@ -75,6 +75,7 @@ namespace BehaviorTree
 		//Attributes Variant
 		[NodeAttribute("Name", NodeAttributeOptionType.Optional)] protected string m_Name;
 		[NodeAttribute("IsReverse", NodeAttributeOptionType.Optional)] protected bool m_IsReverse;
+		public string Name => m_Name;
 		public bool IsReverse => m_IsReverse;
 
 
