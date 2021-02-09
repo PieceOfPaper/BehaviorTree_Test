@@ -97,9 +97,11 @@ namespace BehaviorTree
 
 			if (m_Selection != null)
 			{
-				if (m_Selection is GameObject)
+				if (m_Selection is GameObject || m_Selection is BehaviorTree)
 				{
-					var behaviorTree = ((GameObject)m_Selection).GetComponent<BehaviorTree>();
+					var behaviorTree = m_Selection is BehaviorTree ?
+						(BehaviorTree)m_Selection :
+						((GameObject)m_Selection).GetComponent<BehaviorTree>();
 					if (behaviorTree != null)
 					{
 						if (EditorApplication.isPlaying)

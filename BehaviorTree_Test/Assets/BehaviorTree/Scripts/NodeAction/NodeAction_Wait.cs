@@ -13,7 +13,7 @@ namespace BehaviorTree
 
         public override IEnumerator RunningRoutine()
         {
-            nodeState = NodeState.Running;
+            State = NodeState.Running;
 
             if (m_Time > 0)
             {
@@ -27,7 +27,7 @@ namespace BehaviorTree
                 }
             }
 
-            nodeState = NodeState.Success;
+            State = NodeState.Success;
         }
     }
 }

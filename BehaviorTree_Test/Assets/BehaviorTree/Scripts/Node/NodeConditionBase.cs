@@ -12,9 +12,9 @@ namespace BehaviorTree
 
 		public override IEnumerator RunningRoutine()
 		{
-			nodeState = CheckCondition() ? NodeState.Success : NodeState.Fail;
+			State = CheckCondition() ? NodeState.Success : NodeState.Fail;
 
-			if (nodeState == NodeState.Success)
+			if (State == NodeState.Success)
 			{
 				NodeBase[] nodes = GetAllChildren();
 				for (int i = 0; i < nodes.Length; i++)

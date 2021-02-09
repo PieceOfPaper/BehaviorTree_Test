@@ -58,18 +58,7 @@ namespace BehaviorTree
 
 		protected BehaviorTree baseTree;
 
-		protected NodeState _nodeState = NodeState.None;
-		public virtual NodeState nodeState
-		{
-			protected set
-			{
-				_nodeState = value;
-			}
-			get
-			{
-				return _nodeState;
-			}
-		}
+		public virtual NodeState State { protected set; get; } = NodeState.None;
 
 
 		//Attributes Variant
@@ -142,7 +131,7 @@ namespace BehaviorTree
 			if (childNodes == null) return;
 			childNodes.ForEach(node =>
 			{
-				node.nodeState = NodeState.None;
+				node.State = NodeState.None;
 			});
 		}
 

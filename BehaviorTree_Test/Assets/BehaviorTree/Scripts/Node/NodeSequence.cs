@@ -10,20 +10,20 @@ namespace BehaviorTree
 		public override IEnumerator RunningRoutine()
 		{
 			NodeBase[] nodes = GetAllChildren();
-			nodeState = NodeState.Running;
+			State = NodeState.Running;
 			
 			for (int i = 0; i < nodes.Length; i ++)
 			{
 				yield return baseTree.StartCoroutine( nodes[IsReverse ? nodes.Length - i - 1 : i ].RunningRoutine() );
-				if (nodes[IsReverse ? nodes.Length - i - 1 : i ].nodeState == NodeState.Fail)
+				if (nodes[IsReverse ? nodes.Length - i - 1 : i ].State == NodeState.Fail)
 				{
-					nodeState = NodeState.Fail;
+					State = NodeState.Fail;
 					break;
 				}
 			}
 			
-			if (nodeState != NodeState.Fail)
-				nodeState = NodeState.Success;
+			if (State != NodeState.Fail)
+				State = NodeState.Success;
 				
 			ResetChildrenState();
 		}

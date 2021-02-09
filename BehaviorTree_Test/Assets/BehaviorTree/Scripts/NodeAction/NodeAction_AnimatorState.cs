@@ -25,7 +25,7 @@ namespace BehaviorTree
 
         public override IEnumerator RunningRoutine()
         {
-            nodeState = NodeState.Running;
+            State = NodeState.Running;
 
             m_Animator.Play(m_StateHash);
             var stateInfo = m_Animator.GetCurrentAnimatorStateInfo(0);
@@ -39,7 +39,7 @@ namespace BehaviorTree
                 yield return new WaitForSeconds(stateInfo.length);
             }
 
-            nodeState = NodeState.Success;
+            State = NodeState.Success;
         }
     }
 }

@@ -9,12 +9,12 @@ namespace BehaviorTree
         public override IEnumerator RunningRoutine()
 		{
 			NodeBase[] nodes = GetAllChildren();
-			nodeState = NodeState.Running;
+			State = NodeState.Running;
 
 			for (int i = 0; i < nodes.Length; i++)
 				yield return baseTree.StartCoroutine(nodes[IsReverse ? nodes.Length - i - 1 : i].RunningRoutine());
 
-			nodeState = NodeState.Success;
+			State = NodeState.Success;
 			ResetChildrenState();
 		}
     }

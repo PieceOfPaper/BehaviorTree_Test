@@ -11,6 +11,7 @@ namespace BehaviorTree
     {
         public void DrawGraph(NodeBase rootNode, bool isEditable = false)
         {
+            GUILayout.Space(10); // 살짝 공간만 만들어주자.
             DrawGraphRecusively(rootNode, isEditable);
         }
 
@@ -18,14 +19,29 @@ namespace BehaviorTree
         {
             EditorGUILayout.BeginVertical();
             {
+                Rect parentRect;
                 var fields = node.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                 Dictionary<string, object> changedValues = new Dictionary<string, object>();
 
                 EditorGUILayout.BeginHorizontal();
                 GUILayout.FlexibleSpace();
                 {
+                    Color defaultColor = GUI.color;
                     GUILayout.BeginVertical(node.GetType().Name.Substring(4, node.GetType().Name.Length - 4).Replace('_', ' '), "window", GUILayout.Width(200));
                     
+                    switch(node.State)
+                    {
+                        case NodeState.Running:
+                            GUI.color = Color.yellow;
+                            break;
+                        case NodeState.Success:
+                            GUI.color = Color.green;
+                            break;
+                        case NodeState.Fail:
+                            GUI.color = Color.red;
+                            break;
+                    }
+
                     if (node is NodeRoot)
                     {
                         GUILayout.Label("", GUILayout.Width(100));
@@ -86,11 +102,16 @@ namespace BehaviorTree
                         }
                     }
                     GUILayout.EndVertical();
+                    parentRect = GUILayoutUtility.GetLastRect();
+                    GUI.color = defaultColor;
                 }
                 GUILayout.FlexibleSpace();
                 EditorGUILayout.EndHorizontal();
 
-                if (changedValues.Count > 0)
+
+                // 값 반영
+                if (isEditable == true &&
+                    changedValues.Count > 0)
                 {
                     for (int i = 0; i < fields.Length; i ++)
                     {
@@ -113,6 +134,28 @@ namespace BehaviorTree
                 {
                     GUILayout.Space(50);
                     DrawGraphRecusively(children[i], isEditable);
+                    Rect childRect = GUILayoutUtility.GetLastRect();
+                    Vector3 startPos = new Vector3(
+                            parentRect.center.x, 
+                            parentRect.center.y + parentRect.height * 0.5f, 
+                            0);
+                    Vector3 endPos = new Vector3(
+                            childRect.center.x, 
+                            childRect.center.y - childRect.height * 0.5f, 
+                            0);
+                    if (EditorGUIUtility.isProSkin == false) //outline
+                    {
+                        Handles.DrawBezier(startPos, endPos,
+                        new Vector3(startPos.x, endPos.y, 0),
+                        new Vector3(endPos.x, startPos.y, 0),
+                        Color.black,
+                        null, 4f);
+                    }
+                    Handles.DrawBezier(startPos, endPos,
+                        new Vector3(startPos.x, endPos.y, 0),
+                        new Vector3(endPos.x, startPos.y, 0),
+                        children[i].State == NodeState.Running ? Color.yellow : Color.white,
+                        null, 2f);
                     GUILayout.Space(50);
                 }
                 EditorGUILayout.EndHorizontal();

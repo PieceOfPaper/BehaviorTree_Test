@@ -46,7 +46,7 @@ namespace BehaviorTree
 
 		public override IEnumerator RunningRoutine()
 		{
-			nodeState = NodeState.Running;
+			State = NodeState.Running;
 
 			switch(actionType)
 			{
@@ -55,24 +55,24 @@ namespace BehaviorTree
 						baseTree.SendMessage(methodName);
 					else
 						baseTree.SendMessage(methodName, value);
-					nodeState = NodeState.Success;
+					State = NodeState.Success;
 					break;
 				case ActionType.BrodcastMessage:
 					if (value == null)
 						baseTree.BroadcastMessage(methodName);
 					else
 						baseTree.BroadcastMessage(methodName, value);
-					nodeState = NodeState.Success;
+					State = NodeState.Success;
 					break;
 				case ActionType.SendMessageUpwards:
 					if (value == null)
 						baseTree.SendMessageUpwards(methodName);
 					else
 						baseTree.SendMessageUpwards(methodName, value);
-					nodeState = NodeState.Success;
+					State = NodeState.Success;
 					break;
 				default:
-					nodeState = NodeState.Fail;
+					State = NodeState.Fail;
 					break;
 			}
 
