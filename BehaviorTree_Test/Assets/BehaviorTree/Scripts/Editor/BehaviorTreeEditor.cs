@@ -84,6 +84,8 @@ namespace BehaviorTree
 
 		bool CheckSelection()
 		{
+			if (m_RootNode != null) return true;
+
 			string assetPath = null;
 			if (string.IsNullOrEmpty(SelectionAssetGUID) == false)
 			{
@@ -169,6 +171,7 @@ namespace BehaviorTree
 		public void Select(Object obj)
         {
 			m_Selection = obj;
+			m_RootNode = null;
 			var assetPath = m_Selection == null ? string.Empty : AssetDatabase.GetAssetPath(m_Selection);
 			SelectionAssetGUID = string.IsNullOrEmpty(assetPath) ? string.Empty : AssetDatabase.AssetPathToGUID(assetPath);
         }

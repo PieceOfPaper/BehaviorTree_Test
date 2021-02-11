@@ -14,9 +14,11 @@ namespace BehaviorTree
         const float GRAPH_SPACE_X = 50;
         const float GRAPH_SPACE_Y = 50;
 
+        Dictionary<string, object> m_CopiedAttributes = new Dictionary<string, object>();
+
         public void DrawGraph(NodeBase rootNode, bool isEditable = false)
         {
-            GUILayout.Space(10); // »ìÂ¦ °ø°£¸¸ ¸¸µé¾îÁÖÀÚ.
+            GUILayout.Space(10);
             DrawGraphRecusively(rootNode, isEditable);
         }
 
@@ -49,6 +51,86 @@ namespace BehaviorTree
                             break;
                     }
 
+                    if (node.parentNode != null && isEditable == true)
+                    {
+                        var parentNode = node.parentNode;
+                        var nodeIndex = parentNode.ChildIndexOf(node);
+                        GUILayout.BeginHorizontal();
+                        if (GUILayout.Button("â—€") && 
+                            nodeIndex > 0)
+                        {
+                            parentNode.RemoveChild(node);
+                            parentNode.AddChild(node, nodeIndex - 1);
+                        }
+                        if (GUILayout.Button("â–²") && 
+                            parentNode.parentNode != null)
+                        {
+                            parentNode.RemoveChild(node);
+                            parentNode.parentNode.AddChild(node);
+                        }
+                        if (GUILayout.Button("â–¼") && 
+                            nodeIndex > 0 && parentNode.GetChildrenCount() >= 2)
+                        {
+                            parentNode.RemoveChild(node);
+                            parentNode.GetChild(nodeIndex - 1).AddChild(node);
+                        }
+                        if (GUILayout.Button("â–¶") && 
+                            nodeIndex < parentNode.GetChildrenCount() - 1)
+                        {
+                            parentNode.RemoveChild(node);
+                            parentNode.AddChild(node, nodeIndex + 1);
+                        }
+                        GUILayout.EndHorizontal();
+                    }
+                    else
+                    {
+                        GUILayout.Box("", GUILayout.ExpandWidth(true));
+                    }
+
+                    if (isEditable == true)
+                    {
+                        GUILayout.BeginHorizontal();
+                        if (GUILayout.Button("Copy"))
+                        {
+                            m_CopiedAttributes.Clear();
+                            for (int i = 0; i < fields.Length; i ++)
+                            {
+                                object[] attributes = fields[i].GetCustomAttributes(typeof(NodeAttribute), true);
+                                if (attributes == null || attributes.Length == 0) continue;
+
+                                NodeAttribute nodeAttr = attributes[0] as NodeAttribute;
+                                if (nodeAttr == null) continue;
+                                if (nodeAttr.Option != NodeAttributeOptionType.Required) continue;
+
+                                m_CopiedAttributes.Add(nodeAttr.Name, fields[i].GetValue(node));
+                            }
+                        }
+                        if (GUILayout.Button("Paste"))
+                        {
+                            for (int i = 0; i < fields.Length; i ++)
+                            {
+                                object[] attributes = fields[i].GetCustomAttributes(typeof(NodeAttribute), true);
+                                if (attributes == null || attributes.Length == 0) continue;
+
+                                NodeAttribute nodeAttr = attributes[0] as NodeAttribute;
+                                if (nodeAttr == null) continue;
+                                if (m_CopiedAttributes.ContainsKey(nodeAttr.Name) == false) continue;
+
+                                fields[i].SetValue(node, m_CopiedAttributes[nodeAttr.Name]);
+                            }
+                        }
+                        if (GUILayout.Button("Delete") && node.parentNode != null)
+                        {
+                            var parentNode = node.parentNode;
+                            parentNode.RemoveChild(node);
+                        }
+                        GUILayout.EndHorizontal();
+                    }
+                    else
+                    {
+                        GUILayout.Box("", GUILayout.ExpandWidth(true));
+                    }
+
                     if (node is NodeRoot)
                     {
                         GUILayout.Label("", GUILayout.Width(GRAPH_WINDOW_NAME_WIDTH + GRAPH_WINDOW_VALUE_WIDTH));
@@ -64,7 +146,6 @@ namespace BehaviorTree
 
                     EditorGUILayout.BeginHorizontal();
                     GUILayout.Label("State", GUILayout.Width(GRAPH_WINDOW_NAME_WIDTH));
-                    // EditorGUILayout.TextField(node.State.ToString(), GUILayout.Width(GRAPH_WINDOW_VALUE_WIDTH));
                     GUILayout.Label(node.State.ToString(), GUILayout.Width(GRAPH_WINDOW_VALUE_WIDTH));
                     EditorGUILayout.EndHorizontal();
                     GUILayout.Space(10);
@@ -76,7 +157,7 @@ namespace BehaviorTree
 
                         NodeAttribute nodeAttr = attributes[0] as NodeAttribute;
                         if (nodeAttr == null) continue;
-                        if (nodeAttr.Name == "Name") continue; // ¾ê´Â µû·Î ±×·ÁÁÖÀÚ.
+                        if (nodeAttr.Name == "Name") continue;
                         if (nodeAttr.Option != NodeAttributeOptionType.Required) continue;
 
                         EditorGUILayout.BeginHorizontal();
@@ -114,6 +195,24 @@ namespace BehaviorTree
                             }
                         }
                     }
+
+
+                    if (isEditable == true)
+                    {
+                        GUILayout.BeginHorizontal();
+                        GUILayout.FlexibleSpace();
+                        if (GUILayout.Button("+"))
+                        {
+                            // var newNode = new NodeSelector();
+                            // node.AddChild(newNode);
+                        }
+                        GUILayout.FlexibleSpace();
+                        GUILayout.EndHorizontal();
+                    }
+                    else
+                    {
+                        GUILayout.Box("", GUILayout.ExpandWidth(true));
+                    }
                     GUILayout.EndVertical();
                     parentRect = GUILayoutUtility.GetLastRect();
                     GUI.color = defaultColor;
@@ -122,7 +221,6 @@ namespace BehaviorTree
                 EditorGUILayout.EndHorizontal();
 
 
-                // °ª ¹Ý¿µ
                 if (isEditable == true &&
                     changedValues.Count > 0)
                 {
@@ -141,12 +239,12 @@ namespace BehaviorTree
 
                 if (children.Length > 0)
                 {
-                    GUILayout.Space((GRAPH_SPACE_Y - 10) * 0.5f);
+                    GUILayout.Space(GRAPH_SPACE_Y - 10);
                     GUILayout.Box("", GUILayout.ExpandWidth(true), GUILayout.Height(10));
-                    GUILayout.Space((GRAPH_SPACE_Y - 10) * 0.5f);
 
                     EditorGUILayout.BeginHorizontal();
-                    GUILayout.Space(GRAPH_SPACE_X);
+                    GUILayout.Box("", GUILayout.Width(10), GUILayout.ExpandHeight(true));
+                    GUILayout.Space(GRAPH_SPACE_X - 10);
                     for (int i = 0; i < children.Length; i ++)
                     {
                         if (i > 0) GUILayout.Space(GRAPH_SPACE_X);
@@ -174,7 +272,8 @@ namespace BehaviorTree
                             children[i].State == NodeState.Running ? Color.yellow : Color.white,
                             null, 2f);
                     }
-                    GUILayout.Space(GRAPH_SPACE_X);
+                    GUILayout.Space(GRAPH_SPACE_X - 10);
+                    GUILayout.Box("", GUILayout.Width(10), GUILayout.ExpandHeight(true));
                     EditorGUILayout.EndHorizontal();
                 }
                 GUILayout.FlexibleSpace();

@@ -115,6 +115,13 @@ namespace BehaviorTree
 			return childNodes.Count;
 		}
 
+		public NodeBase GetChild(int index)
+		{
+			if (childNodes == null) return null;
+			if (index < 0 || index >= childNodes.Count) return null;
+			return childNodes[index];
+		}
+
 		public NodeBase[] GetAllChildren()
 		{
 			if (childNodes == null) return null;
@@ -133,6 +140,12 @@ namespace BehaviorTree
 			{
 				node.State = NodeState.None;
 			});
+		}
+
+		public int ChildIndexOf(NodeBase node)
+		{
+			if (childNodes == null) return -1;
+			return childNodes.IndexOf(node);
 		}
 
 
