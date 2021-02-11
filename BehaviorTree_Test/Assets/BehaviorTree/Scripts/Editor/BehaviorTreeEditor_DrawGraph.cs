@@ -14,6 +14,19 @@ namespace BehaviorTree
         const float GRAPH_SPACE_X = 50;
         const float GRAPH_SPACE_Y = 50;
 
+        static string[] ADDABLE_NODE_TYPES = new string[] {
+            "Add",
+
+            "Selector",
+            "Sequence",
+
+            "Action_SendMessage",
+            "Action_AnimatorState",
+            "Action_Wait",
+
+            "Condition_ComponentField",
+        };
+
         Dictionary<string, object> m_CopiedAttributes = new Dictionary<string, object>();
 
         public void DrawGraph(NodeBase rootNode, bool isEditable = false)
@@ -36,7 +49,7 @@ namespace BehaviorTree
                 GUILayout.FlexibleSpace();
                 {
                     Color defaultColor = GUI.color;
-                    GUILayout.BeginVertical(node.GetType().Name.Substring(4, node.GetType().Name.Length - 4).Replace('_', ' '), "window", GUILayout.Width(200));
+                    GUILayout.BeginVertical(node.GetType().Name.Substring(4, node.GetType().Name.Length - 4), "window", GUILayout.Width(200));
                     
                     switch(node.State)
                     {
@@ -201,10 +214,15 @@ namespace BehaviorTree
                     {
                         GUILayout.BeginHorizontal();
                         GUILayout.FlexibleSpace();
-                        if (GUILayout.Button("+"))
+                        var addSelectedIndex = EditorGUILayout.Popup(0, ADDABLE_NODE_TYPES, GUILayout.Width(GRAPH_WINDOW_VALUE_WIDTH));
+                        if (addSelectedIndex > 0)
                         {
-                            // var newNode = new NodeSelector();
-                            // node.AddChild(newNode);
+                            Type nodeType = Util.GetNodeType(ADDABLE_NODE_TYPES[addSelectedIndex]);
+                            if (nodeType != null)
+                            {
+                                NodeBase newNode = Activator.CreateInstance(nodeType) as NodeBase;
+                                node.AddChild(newNode);
+                            }
                         }
                         GUILayout.FlexibleSpace();
                         GUILayout.EndHorizontal();
