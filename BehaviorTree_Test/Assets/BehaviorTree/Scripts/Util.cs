@@ -63,6 +63,8 @@ namespace BehaviorTree
 		public static XmlDocument ConvertToXml(this NodeBase node)
         {
 			XmlDocument xml = new XmlDocument();
+    		var xmldecl = xml.CreateXmlDeclaration("1.0", "utf-8", null);
+			xml.AppendChild(xmldecl);
 			ConvertToXmlRecusively(xml, xml, node);
 			return xml;
 		}
@@ -70,7 +72,12 @@ namespace BehaviorTree
 		static void ConvertToXmlRecusively(XmlDocument xmlDocument, XmlNode xmlNode, NodeBase node)
 		{
 			var type = node.GetType();
-			var newXmlNode = xmlDocument.CreateElement(type.Name.Replace("BehaviorTree.Node", ""));
+			XmlElement newXmlNode = null;
+
+			if (node is NodeRoot)
+				newXmlNode = xmlDocument.CreateElement("BehaviorTree");
+			else
+				newXmlNode = xmlDocument.CreateElement(type.Name.Substring(4, node.GetType().Name.Length - 4));
 
 			var fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 			for (int i = 0; i < fields.Length; i++)

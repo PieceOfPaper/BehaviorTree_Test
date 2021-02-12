@@ -197,10 +197,10 @@ namespace BehaviorTree
 			var xml = rootNode.ConvertToXml();
 			if (xml == null) return;
 
-			xml.Save(System.IO.Path.Combine(Application.dataPath, assetPath.Replace("Assets", "")));
+			xml.Save(System.IO.Path.Combine(Application.dataPath, assetPath.Replace("Assets/", "")));
 			AssetDatabase.Refresh();
 
-			m_Selection = null;
+			m_RootNode = null;
 			Repaint();
 		}
 	}
