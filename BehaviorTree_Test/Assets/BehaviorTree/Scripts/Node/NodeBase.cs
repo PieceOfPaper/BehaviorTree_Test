@@ -14,6 +14,8 @@ namespace BehaviorTree
 		Running,
 	}
 
+	// 필수와 옵션을 나누기위해 만들었는데, 오히려 개발이 불편해짐.
+	// 현재는 그냥 대충 Required면 에러정도 띄워주는 정도 처리함.
 	public enum NodeAttributeOptionType
     {
 		Required,
@@ -29,11 +31,16 @@ namespace BehaviorTree
 		public string Name => m_Name;
 		public NodeAttributeOptionType Option => m_Option;
 
+		public NodeAttribute(string name)
+        {
+			m_Name = name;
+			m_Option = NodeAttributeOptionType.Optional;
+		}
+
 		public NodeAttribute(string name, NodeAttributeOptionType option)
         {
 			m_Name = name;
 			m_Option = option;
-
 		}
 	}
 

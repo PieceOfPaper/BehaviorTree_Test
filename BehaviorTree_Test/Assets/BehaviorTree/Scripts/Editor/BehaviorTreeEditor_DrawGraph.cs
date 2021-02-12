@@ -171,7 +171,7 @@ namespace BehaviorTree
                         NodeAttribute nodeAttr = attributes[0] as NodeAttribute;
                         if (nodeAttr == null) continue;
                         if (nodeAttr.Name == "Name") continue;
-                        if (nodeAttr.Option != NodeAttributeOptionType.Required) continue;
+                        // if (nodeAttr.Option != NodeAttributeOptionType.Required) continue;
 
                         EditorGUILayout.BeginHorizontal();
                         GUILayout.Label(nodeAttr.Name, GUILayout.Width(GRAPH_WINDOW_NAME_WIDTH));
