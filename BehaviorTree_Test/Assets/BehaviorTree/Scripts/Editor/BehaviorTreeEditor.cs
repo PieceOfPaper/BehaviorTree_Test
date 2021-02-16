@@ -147,8 +147,26 @@ namespace BehaviorTree
 
 			if (GUILayout.Button("Create New XML"))
             {
-				// TO DO - Node이름만 적당히 입력하면 만들어주는 팝업을 따로 만들자.
-				// 상속받는 클래스이름, Node이름 두가지정도만 Input으로 받으면 될 것 같다.
+				var savePath = EditorUtility.SaveFilePanel(
+					"Create New XML",
+					Application.dataPath,
+					"",
+					"xml");
+
+				if (string.IsNullOrEmpty(savePath) == false)
+                {
+					if (savePath.StartsWith(Application.dataPath) == true)
+					{
+						var assetPath = savePath.Replace(Application.dataPath, "Assets");
+						Save(assetPath, new NodeRoot());
+						AssetDatabase.Refresh();
+						Select(AssetDatabase.LoadAssetAtPath(assetPath, typeof(TextAsset)));
+					}
+					else
+                    {
+						Debug.LogError("Save Path Error");
+                    }
+				}
 			}
 
 			EditorGUILayout.Space();
@@ -192,6 +210,11 @@ namespace BehaviorTree
 				assetPath = AssetDatabase.GetAssetPath(m_Selection);
 			}
 
+			Save(assetPath, rootNode);
+		}
+
+		public void Save(string assetPath, NodeBase rootNode)
+		{
 			if (string.IsNullOrEmpty(assetPath) == true) return;
 
 			var xml = rootNode.ConvertToXml();
