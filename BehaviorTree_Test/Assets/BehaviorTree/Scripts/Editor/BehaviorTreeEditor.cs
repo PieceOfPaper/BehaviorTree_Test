@@ -8,14 +8,9 @@ namespace BehaviorTree
 {
 	public partial class BehaviorTreeEditor : EditorWindow
 	{
-		const float WINDOW_MINSIZE_WIDTH = 200;
-		const float WINDOW_MINSIZE_HEIGHT = 200;
+        #region Static Methods
 
-		const float MENU_WIDTH = 200;
-
-
-
-		[MenuItem("BehaviorTree/Editor")]
+        [MenuItem("BehaviorTree/Open Editor")]
 		public static BehaviorTreeEditor Open()
 		{
 			BehaviorTreeEditor window = (BehaviorTreeEditor)EditorWindow.GetWindow(typeof(BehaviorTreeEditor), false, "BehaviorTree Editor");
@@ -33,9 +28,72 @@ namespace BehaviorTree
 		}
 
 
+		[MenuItem("BehaviorTree/Create New XML")]
+		public static string CreateNewXml()
+		{
+			var savePath = EditorUtility.SaveFilePanel(
+				"Create New XML",
+				Application.dataPath,
+				"",
+				"xml");
+
+			if (string.IsNullOrEmpty(savePath) == false)
+			{
+				if (savePath.StartsWith(Application.dataPath) == true)
+				{
+					var assetPath = savePath.Replace(Application.dataPath, "Assets");
+					var saveSuccess = Save(assetPath, new NodeRoot());
+					AssetDatabase.Refresh();
+					return saveSuccess ? assetPath : null;
+				}
+				else
+				{
+					Debug.LogError("Save Path Error");
+				}
+			}
+
+			return null;
+		}
 
 
-		string SelectionAssetGUID
+		public static bool Save(Object targetObj, NodeBase rootNode)
+		{
+			if (targetObj == null) return false;
+
+			string assetPath = null;
+			if (targetObj is GameObject)
+			{
+				var behaviorTree = ((GameObject)targetObj).GetComponent<BehaviorTree>();
+				if (behaviorTree != null && EditorApplication.isPlaying == false)
+					assetPath = AssetDatabase.GetAssetPath(behaviorTree.XmlFile);
+			}
+			else if (targetObj is TextAsset)
+			{
+				assetPath = AssetDatabase.GetAssetPath(targetObj);
+			}
+
+			return Save(assetPath, rootNode);
+		}
+
+		public static bool Save(string assetPath, NodeBase rootNode)
+		{
+			if (string.IsNullOrEmpty(assetPath) == true) return false;
+
+			var xml = rootNode.ConvertToXml();
+			if (xml == null) return false;
+
+			xml.Save(System.IO.Path.Combine(Application.dataPath, assetPath.Replace("Assets/", "")));
+			AssetDatabase.Refresh();
+			return true;
+		}
+
+        #endregion
+
+
+
+        #region Editor - Variable
+
+        string SelectionAssetGUID
         {
 			get { return EditorPrefs.GetString("BehaviorTreeEditor_SelectionAssetGUID", string.Empty); }
 			set { EditorPrefs.SetString("BehaviorTreeEditor_SelectionAssetGUID", value); }
@@ -47,6 +105,21 @@ namespace BehaviorTree
 		bool m_IsEditable = false;
 		Vector2 m_MenuScroll = Vector2.zero;
 		Vector2 m_GraphScroll = Vector2.zero;
+
+		#endregion
+
+
+		#region Editor - Const
+
+		const float WINDOW_MINSIZE_WIDTH = 200;
+		const float WINDOW_MINSIZE_HEIGHT = 200;
+
+		const float MENU_WIDTH = 200;
+
+		#endregion
+
+
+		#region Editor - Method (OnGUI)
 
 		void OnGUI()
 		{
@@ -76,6 +149,8 @@ namespace BehaviorTree
 					if (GUI.Button(new Rect(position.width - 60, 10, 50, 20), "Save"))
 					{
 						Save(m_Selection, m_RootNode);
+						m_RootNode = null;
+						Repaint();
 					}
 				}
 			}
@@ -147,26 +222,9 @@ namespace BehaviorTree
 
 			if (GUILayout.Button("Create New XML"))
             {
-				var savePath = EditorUtility.SaveFilePanel(
-					"Create New XML",
-					Application.dataPath,
-					"",
-					"xml");
-
-				if (string.IsNullOrEmpty(savePath) == false)
-                {
-					if (savePath.StartsWith(Application.dataPath) == true)
-					{
-						var assetPath = savePath.Replace(Application.dataPath, "Assets");
-						Save(assetPath, new NodeRoot());
-						AssetDatabase.Refresh();
-						Select(AssetDatabase.LoadAssetAtPath(assetPath, typeof(TextAsset)));
-					}
-					else
-                    {
-						Debug.LogError("Save Path Error");
-                    }
-				}
+				var assetPath = CreateNewXml();
+				if (string.IsNullOrEmpty(assetPath) == false)
+					Select(AssetDatabase.LoadAssetAtPath(assetPath, typeof(TextAsset)));
 			}
 
 			EditorGUILayout.Space();
@@ -185,6 +243,10 @@ namespace BehaviorTree
 			DrawGraph(m_RootNode, m_IsEditable);
 		}
 
+		#endregion
+
+
+		#region Editor - Method (Public)
 
 		public void Select(Object obj)
         {
@@ -194,38 +256,7 @@ namespace BehaviorTree
 			SelectionAssetGUID = string.IsNullOrEmpty(assetPath) ? string.Empty : AssetDatabase.AssetPathToGUID(assetPath);
         }
 
-		public void Save(Object targetObj, NodeBase rootNode)
-        {
-			if (targetObj == null) return;
-
-			string assetPath = null;
-			if (m_Selection is GameObject)
-			{
-				var behaviorTree = ((GameObject)m_Selection).GetComponent<BehaviorTree>();
-				if (behaviorTree != null && EditorApplication.isPlaying == false)
-					assetPath = AssetDatabase.GetAssetPath(behaviorTree.XmlFile);
-			}
-			else if (m_Selection is TextAsset)
-			{
-				assetPath = AssetDatabase.GetAssetPath(m_Selection);
-			}
-
-			Save(assetPath, rootNode);
-		}
-
-		public void Save(string assetPath, NodeBase rootNode)
-		{
-			if (string.IsNullOrEmpty(assetPath) == true) return;
-
-			var xml = rootNode.ConvertToXml();
-			if (xml == null) return;
-
-			xml.Save(System.IO.Path.Combine(Application.dataPath, assetPath.Replace("Assets/", "")));
-			AssetDatabase.Refresh();
-
-			m_RootNode = null;
-			Repaint();
-		}
-	}
+        #endregion
+    }
 
 }
