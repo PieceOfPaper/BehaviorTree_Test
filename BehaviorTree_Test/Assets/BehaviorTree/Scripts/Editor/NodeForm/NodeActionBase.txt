@@ -1,0 +1,14 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace BehaviorTree
+{
+    public class NodeAction_%%TYPENAME%% : NodeActionBase
+    {
+        public override IEnumerator RunningRoutine()
+        {
+            throw new System.NotImplementedException();
+        }
+    }
+}
