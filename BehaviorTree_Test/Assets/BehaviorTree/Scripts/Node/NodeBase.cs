@@ -181,6 +181,32 @@ namespace BehaviorTree
 			this.baseTree = baseTree;
 		}
 
+		public virtual void Setup(SerializedNodeAttribute[] nodeAttributes, BehaviorTree baseTree)
+		{
+			var fields = GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+			for (int i = 0; i < fields.Length; i++)
+			{
+				object[] attributes = fields[i].GetCustomAttributes(typeof(NodeAttribute), true);
+				if (attributes == null || attributes.Length == 0) continue;
+
+				NodeAttribute nodeAttr = attributes[0] as NodeAttribute;
+				if (nodeAttr == null) continue;
+
+				SerializedNodeAttribute attrData = nodeAttributes == null ? null : Array.Find(nodeAttributes, m => m.Name == nodeAttr.Name);
+				if (attrData == null ||
+					string.IsNullOrEmpty(attrData.Value) == true)
+				{
+					if (nodeAttr.Option == NodeAttributeOptionType.Required)
+						Debug.LogErrorFormat("[BehaviorTree.{0}] Require Attribute - {1}", GetType().Name, nodeAttr.Name);
+					continue;
+				}
+
+				fields[i].SetValue(this, Util.Parse(fields[i].FieldType, attrData.Value));
+			}
+
+			this.baseTree = baseTree;
+		}
+
 		public abstract IEnumerator RunningRoutine();
 	}
 }
