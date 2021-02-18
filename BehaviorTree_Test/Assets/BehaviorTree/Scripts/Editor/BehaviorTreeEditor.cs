@@ -295,6 +295,13 @@ namespace BehaviorTree
 					Select(AssetDatabase.LoadAssetAtPath(assetPath, typeof(BehaviorTreeAsset)));
 			}
 
+			GUILayout.Space(10);
+
+			if (GUILayout.Button("Open Node Generate Editor"))
+			{
+				NodeGenerateEditor.Open();
+			}
+
 			EditorGUILayout.Space();
 
 			EditorGUILayout.EndVertical();

@@ -1,0 +1,16 @@
+using System;
+using System.Reflection;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace BehaviorTree
+{
+    public class NodeCondition_%%TYPENAME%% : NodeConditionBase
+	{
+		public override bool CheckCondition()
+        {
+            throw new System.NotImplementedException();
+        }
+    }
+}
