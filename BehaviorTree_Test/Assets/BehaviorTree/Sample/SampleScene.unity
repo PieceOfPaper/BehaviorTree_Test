@@ -312,6 +312,11 @@ PrefabInstance:
       propertyPath: m_XMLFile
       value: 
       objectReference: {fileID: 4900000, guid: 6ecf5604ecb3ccb469b5c7ff399074f0, type: 3}
+    - target: {fileID: 4689527807308812589, guid: 72830d5cb372ff0469cc5c3478d49984,
+        type: 3}
+      propertyPath: m_TargetObject
+      value: 
+      objectReference: {fileID: 4900000, guid: 6ecf5604ecb3ccb469b5c7ff399074f0, type: 3}
     - target: {fileID: 6468158295451707943, guid: 72830d5cb372ff0469cc5c3478d49984,
         type: 3}
       propertyPath: m_Name

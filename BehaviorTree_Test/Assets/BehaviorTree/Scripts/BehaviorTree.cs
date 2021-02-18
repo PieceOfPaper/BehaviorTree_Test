@@ -8,12 +8,20 @@ namespace BehaviorTree
 {
 	public class BehaviorTree : MonoBehaviour
 	{
-		[SerializeField] TextAsset m_XMLFile;
+		[SerializeField] UnityEngine.Object m_TargetObject = null;
+
+
 		public TextAsset XmlFile
         {
-			set { m_XMLFile = value; LoadXml(); }
-			get { return m_XMLFile; }
-        }
+			set { m_TargetObject = value; LoadData(); }
+			get { return m_TargetObject as TextAsset; }
+		}
+		public BehaviorTreeAsset AssetFile
+		{
+			set { m_TargetObject = value; LoadData(); }
+			get { return m_TargetObject as BehaviorTreeAsset; }
+		}
+
 
 		[SerializeField] bool m_RunOnEnabled = true;
 		public bool RunOnEnabled => m_RunOnEnabled;
@@ -31,7 +39,7 @@ namespace BehaviorTree
 
         private void Awake()
         {
-			LoadXml();
+			LoadData();
 		}
 
         private void OnEnable()
@@ -46,12 +54,14 @@ namespace BehaviorTree
 		}
 
 
-		public void LoadXml()
+		public void LoadData()
         {
 			if (Application.isPlaying == false) return;
-			if (m_XMLFile == null) return;
 
-			m_RootNode = Util.GenerateNodeByXml(this, m_XMLFile);
+			if (XmlFile != null)
+				m_RootNode = Util.GenerateNodeByXml(this, XmlFile);
+			else if (AssetFile != null)
+				m_RootNode = Util.GenerateNodeByAsset(this, AssetFile);
 		}
 
 		public void Run()

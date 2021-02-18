@@ -55,6 +55,33 @@ namespace BehaviorTree
 			return null;
 		}
 
+		[MenuItem("BehaviorTree/Create New Asset")]
+		public static string CreateNewAsset()
+		{
+			var savePath = EditorUtility.SaveFilePanel(
+				"Create New Asset",
+				Application.dataPath,
+				"",
+				"asset");
+
+			if (string.IsNullOrEmpty(savePath) == false)
+			{
+				if (savePath.StartsWith(Application.dataPath) == true)
+				{
+					var assetPath = savePath.Replace(Application.dataPath, "Assets");
+					var saveSuccess = Save(assetPath, new NodeRoot());
+					AssetDatabase.Refresh();
+					return saveSuccess ? assetPath : null;
+				}
+				else
+				{
+					Debug.LogError("Save Path Error");
+				}
+			}
+
+			return null;
+		}
+
 
 		public static bool Save(Object targetObj, NodeBase rootNode)
 		{
@@ -65,9 +92,14 @@ namespace BehaviorTree
 			{
 				var behaviorTree = ((GameObject)targetObj).GetComponent<BehaviorTree>();
 				if (behaviorTree != null && EditorApplication.isPlaying == false)
-					assetPath = AssetDatabase.GetAssetPath(behaviorTree.XmlFile);
+				{
+					if (behaviorTree.XmlFile != null)
+						assetPath = AssetDatabase.GetAssetPath(behaviorTree.XmlFile);
+					else if (behaviorTree.AssetFile != null)
+						assetPath = AssetDatabase.GetAssetPath(behaviorTree.AssetFile);
+				}
 			}
-			else if (targetObj is TextAsset)
+			else if (targetObj is TextAsset || targetObj is BehaviorTreeAsset)
 			{
 				assetPath = AssetDatabase.GetAssetPath(targetObj);
 			}
@@ -79,10 +111,27 @@ namespace BehaviorTree
 		{
 			if (string.IsNullOrEmpty(assetPath) == true) return false;
 
-			var xml = rootNode.ConvertToXml();
-			if (xml == null) return false;
+			var lowerPath = assetPath.ToLower();
+			if (lowerPath.EndsWith(".xml"))
+			{
+				var xml = rootNode.ConvertToXml();
+				if (xml == null) return false;
 
-			xml.Save(System.IO.Path.Combine(Application.dataPath, assetPath.Replace("Assets/", "")));
+				xml.Save(System.IO.Path.Combine(Application.dataPath, assetPath.Replace("Assets/", "")));
+			}
+			else if (lowerPath.EndsWith(".asset"))
+			{
+				var asset = AssetDatabase.LoadAssetAtPath<BehaviorTreeAsset>(assetPath);
+				if (asset == null)
+                {
+					asset = CreateInstance<BehaviorTreeAsset>();
+					AssetDatabase.CreateAsset(asset, assetPath);
+				}
+				asset.SetRootNode(rootNode.ConvertToAsset());
+				EditorUtility.SetDirty(asset);
+				AssetDatabase.SaveAssets();
+
+			}
 			AssetDatabase.Refresh();
 			return true;
 		}
@@ -195,6 +244,12 @@ namespace BehaviorTree
 								m_IsEditable = true;
 								return true;
 							}
+							else if (behaviorTree.AssetFile != null)
+							{
+								m_RootNode = Util.GenerateNodeByAsset(behaviorTree.AssetFile);
+								m_IsEditable = true;
+								return true;
+							}
 						}
 					}
 				}
@@ -202,6 +257,13 @@ namespace BehaviorTree
 					string.IsNullOrEmpty(assetPath) == false && assetPath.ToLower().EndsWith(".xml"))
 				{
 					m_RootNode = Util.GenerateNodeByXml((TextAsset)m_Selection);
+					m_IsEditable = true;
+					return true;
+				}
+				else if (m_Selection is BehaviorTreeAsset &&
+					string.IsNullOrEmpty(assetPath) == false && assetPath.ToLower().EndsWith(".asset"))
+				{
+					m_RootNode = Util.GenerateNodeByAsset((BehaviorTreeAsset)m_Selection);
 					m_IsEditable = true;
 					return true;
 				}
@@ -225,6 +287,12 @@ namespace BehaviorTree
 				var assetPath = CreateNewXml();
 				if (string.IsNullOrEmpty(assetPath) == false)
 					Select(AssetDatabase.LoadAssetAtPath(assetPath, typeof(TextAsset)));
+			}
+			if (GUILayout.Button("Create New Asset"))
+			{
+				var assetPath = CreateNewAsset();
+				if (string.IsNullOrEmpty(assetPath) == false)
+					Select(AssetDatabase.LoadAssetAtPath(assetPath, typeof(BehaviorTreeAsset)));
 			}
 
 			EditorGUILayout.Space();

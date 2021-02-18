@@ -105,6 +105,90 @@ namespace BehaviorTree
 			}
 		}
 
+
+
+		public static NodeBase GenerateNodeByAsset(in BehaviorTreeAsset asset)
+        {
+			return GenerateNodeByAsset(null, asset);
+		}
+
+		public static NodeBase GenerateNodeByAsset(in BehaviorTree baseTree, in BehaviorTreeAsset asset)
+		{
+			var rootNode = new NodeRoot();
+			rootNode.Setup(asset.RootNode.Attributes, baseTree);
+			GenerateNodeByAssetRecusively(baseTree, asset.RootNode, rootNode);
+			return rootNode;
+		}
+
+		static void GenerateNodeByAssetRecusively(BehaviorTree baseTree, SerializedNode nodeData, NodeBase btNode)
+		{
+			if (nodeData == null || nodeData.Children == null) return;
+
+			for (int i = 0; i < nodeData.Children.Length; i ++)
+            {
+				if (nodeData.Children[i] == null) continue;
+
+				Type nodeType = GetNodeType(nodeData.Children[i].Type);
+				if (nodeType == null) continue;
+
+				NodeBase newBTNode = Activator.CreateInstance(nodeType) as NodeBase;
+				if (newBTNode == null) continue;
+
+				newBTNode.Setup(nodeData.Children[i].Attributes, baseTree);
+				btNode.AddChild(newBTNode);
+				GenerateNodeByAssetRecusively(baseTree, nodeData.Children[i], newBTNode);
+			}
+		}
+
+		public static SerializedNode ConvertToAsset(this NodeBase node)
+		{
+			SerializedNode nodeData = new SerializedNode("Root");
+			var childNodes = node.GetAllChildren();
+			for (int i = 0; i < childNodes.Length; i++)
+			{
+				if (childNodes[i] == null) continue;
+				ConvertToAssetRecusively(nodeData, childNodes[i]);
+			}
+			return nodeData;
+		}
+
+		static void ConvertToAssetRecusively(SerializedNode nodeData, NodeBase node)
+		{
+			var type = node.GetType();
+			SerializedNode newNodeData = null;
+
+			newNodeData = new SerializedNode(type.Name.Substring(4, node.GetType().Name.Length - 4));
+
+			newNodeData.ModifyAttributes((list) =>
+			{
+				var fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+				for (int i = 0; i < fields.Length; i++)
+				{
+					object[] attributes = fields[i].GetCustomAttributes(typeof(NodeAttribute), true);
+					if (attributes == null || attributes.Length == 0) continue;
+
+					NodeAttribute nodeAttr = attributes[0] as NodeAttribute;
+					if (nodeAttr == null) continue;
+
+					object fieldValue = fields[i].GetValue(node);
+					if (fieldValue == null) continue;
+
+					list.Add(new SerializedNodeAttribute(nodeAttr.Name, fieldValue.ToString()));
+				}
+			});
+
+			nodeData.ModifyChildren(list => list.Add(newNodeData));
+
+			var childNodes = node.GetAllChildren();
+			for (int i = 0; i < childNodes.Length; i++)
+			{
+				if (childNodes[i] == null) continue;
+				ConvertToAssetRecusively(newNodeData, childNodes[i]);
+			}
+		}
+
+
+
 		public static Type GetNodeType(string nodeTypeName)
 		{
 			if (m_CachedNodeTypes.ContainsKey(nodeTypeName) == false)
