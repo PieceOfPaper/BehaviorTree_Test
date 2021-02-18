@@ -127,7 +127,7 @@ namespace BehaviorTree
 					asset = CreateInstance<BehaviorTreeAsset>();
 					AssetDatabase.CreateAsset(asset, assetPath);
 				}
-				asset.SetRootNode(rootNode.ConvertToAsset());
+				asset.SetNodes(rootNode.ConvertToAsset());
 				EditorUtility.SetDirty(asset);
 				AssetDatabase.SaveAssets();
 

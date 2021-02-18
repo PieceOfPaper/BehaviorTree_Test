@@ -24,6 +24,12 @@ namespace BehaviorTree
     [System.Serializable]
     public class SerializedNode
     {
+        [SerializeField] int m_ID;
+        public int ID => m_ID;
+
+        [SerializeField] int m_ParentID;
+        public int ParentID => m_ParentID;
+
         [SerializeField] string m_Type;
         public string Type => m_Type;
 
@@ -39,31 +45,32 @@ namespace BehaviorTree
         }
 #endif
 
-        [SerializeField] SerializedNode[] m_Children;
-        public SerializedNode[] Children => m_Children;
-#if UNITY_EDITOR
-        public void ModifyChildren(Action<IList<SerializedNode>> method)
+        public SerializedNode(int myID, int parentID, string type)
         {
-            var list = m_Children == null ? new List<SerializedNode>() : new List<SerializedNode>(m_Children);
-            method?.Invoke(list);
-            m_Children = list == null ? null : list.ToArray();
-        }
-#endif
-
-        public SerializedNode(string type)
-        {
+            m_ID = myID;
+            m_ParentID = parentID;
             m_Type = type;
         }
     }
 
 
-    [CreateAssetMenu(fileName = "BehaviorTree", menuName = "Scriptable Object/BehaviorTree")]
     public class BehaviorTreeAsset : ScriptableObject
     {
-        [SerializeField] SerializedNode m_RootNode;
-        public SerializedNode RootNode => m_RootNode;
+        [SerializeField] SerializedNode[] m_Nodes;
+        public SerializedNode[] Nodes => m_Nodes;
 #if UNITY_EDITOR
-        public void SetRootNode(SerializedNode node) => m_RootNode = node;
+        public void SetNodes(SerializedNode[] nodes) => m_Nodes = nodes;
 #endif
+
+        public SerializedNode GetNodeByID(int ID)
+        {
+            return Array.Find(m_Nodes, m => m.ID == ID);
+        }
+
+        public SerializedNode[] GetNodesByParentID(int parentID)
+        {
+            if (m_Nodes == null) return null;
+            return Array.FindAll(m_Nodes, m => m.ParentID == parentID);
+        }
     }
 }

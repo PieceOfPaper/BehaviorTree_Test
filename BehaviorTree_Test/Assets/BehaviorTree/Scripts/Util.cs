@@ -114,50 +114,58 @@ namespace BehaviorTree
 
 		public static NodeBase GenerateNodeByAsset(in BehaviorTree baseTree, in BehaviorTreeAsset asset)
 		{
+			var noParentNodeDatas = asset.GetNodesByParentID(-1);
+			var rootNodeData = noParentNodeDatas == null || noParentNodeDatas.Length == 0 ? null : noParentNodeDatas[0];
+			if (rootNodeData == null) return null;
+
 			var rootNode = new NodeRoot();
-			rootNode.Setup(asset.RootNode.Attributes, baseTree);
-			GenerateNodeByAssetRecusively(baseTree, asset.RootNode, rootNode);
+			rootNode.Setup(rootNodeData.Attributes, baseTree);
+			GenerateNodeByAssetRecusively(baseTree, asset, rootNodeData, rootNode);
 			return rootNode;
 		}
 
-		static void GenerateNodeByAssetRecusively(BehaviorTree baseTree, SerializedNode nodeData, NodeBase btNode)
+		static void GenerateNodeByAssetRecusively(BehaviorTree baseTree, BehaviorTreeAsset asset, SerializedNode nodeData, NodeBase btNode)
 		{
-			if (nodeData == null || nodeData.Children == null) return;
+			if (nodeData == null) return;
 
-			for (int i = 0; i < nodeData.Children.Length; i ++)
+			var children = asset.GetNodesByParentID(nodeData.ID);
+			for (int i = 0; i < children.Length; i ++)
             {
-				if (nodeData.Children[i] == null) continue;
+				if (children[i] == null) continue;
 
-				Type nodeType = GetNodeType(nodeData.Children[i].Type);
+				Type nodeType = GetNodeType(children[i].Type);
 				if (nodeType == null) continue;
 
 				NodeBase newBTNode = Activator.CreateInstance(nodeType) as NodeBase;
 				if (newBTNode == null) continue;
 
-				newBTNode.Setup(nodeData.Children[i].Attributes, baseTree);
+				newBTNode.Setup(children[i].Attributes, baseTree);
 				btNode.AddChild(newBTNode);
-				GenerateNodeByAssetRecusively(baseTree, nodeData.Children[i], newBTNode);
+				GenerateNodeByAssetRecusively(baseTree, asset, children[i], newBTNode);
 			}
 		}
 
-		public static SerializedNode ConvertToAsset(this NodeBase node)
+		public static SerializedNode[] ConvertToAsset(this NodeBase node)
 		{
-			SerializedNode nodeData = new SerializedNode("Root");
+			List<SerializedNode> list = new List<SerializedNode>();
+			SerializedNode nodeData = new SerializedNode(list.Count, -1, "Root");
+			list.Add(nodeData);
 			var childNodes = node.GetAllChildren();
 			for (int i = 0; i < childNodes.Length; i++)
 			{
 				if (childNodes[i] == null) continue;
-				ConvertToAssetRecusively(nodeData, childNodes[i]);
+				ConvertToAssetRecusively(nodeData, childNodes[i], list);
 			}
-			return nodeData;
+			return list.ToArray();
 		}
 
-		static void ConvertToAssetRecusively(SerializedNode nodeData, NodeBase node)
+		static void ConvertToAssetRecusively(SerializedNode nodeData, NodeBase node, List<SerializedNode> list)
 		{
 			var type = node.GetType();
 			SerializedNode newNodeData = null;
 
-			newNodeData = new SerializedNode(type.Name.Substring(4, node.GetType().Name.Length - 4));
+			newNodeData = new SerializedNode(list.Count, nodeData.ID, type.Name.Substring(4, node.GetType().Name.Length - 4));
+			list.Add(newNodeData);
 
 			newNodeData.ModifyAttributes((list) =>
 			{
@@ -177,13 +185,11 @@ namespace BehaviorTree
 				}
 			});
 
-			nodeData.ModifyChildren(list => list.Add(newNodeData));
-
 			var childNodes = node.GetAllChildren();
 			for (int i = 0; i < childNodes.Length; i++)
 			{
 				if (childNodes[i] == null) continue;
-				ConvertToAssetRecusively(newNodeData, childNodes[i]);
+				ConvertToAssetRecusively(newNodeData, childNodes[i], list);
 			}
 		}
 
