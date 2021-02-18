@@ -29,10 +29,26 @@ namespace BehaviorTree
 
         Dictionary<string, object> m_CopiedAttributes = new Dictionary<string, object>();
 
+
+        GraphDragType m_GraphDragType = GraphDragType.None;
+        public enum GraphDragType
+        {
+            None = 0,
+
+            DragScroll,
+        }
+
+
         public void DrawGraph(NodeBase rootNode, bool isEditable = false)
         {
             GUILayout.Space(10);
+
             DrawGraphRecusively(rootNode, isEditable);
+
+            CheckGraphEvent(isEditable);
+
+            // 이벤트때문에라도 계속 갱신시켜주자.
+            Repaint();
         }
 
         void DrawGraphRecusively(NodeBase node, bool isEditable = false)
@@ -297,6 +313,31 @@ namespace BehaviorTree
                 GUILayout.FlexibleSpace();
             }
             EditorGUILayout.EndVertical();
+        }
+
+        void CheckGraphEvent(bool isEditable)
+        {
+            switch(Event.current.type)
+            {
+                case EventType.MouseDown:
+                    m_GraphDragType = GraphDragType.DragScroll;
+                    break;
+                case EventType.MouseUp:
+                case EventType.MouseLeaveWindow:
+                    m_GraphDragType = GraphDragType.None;
+                    break;
+            }
+
+            if (Event.current.type == EventType.MouseDrag)
+            {
+                switch (m_GraphDragType)
+                {
+                    case GraphDragType.DragScroll:
+                        m_GraphScroll += -Event.current.delta;
+                        Event.current.Use();
+                        break;
+                }
+            }
         }
     }
 }
