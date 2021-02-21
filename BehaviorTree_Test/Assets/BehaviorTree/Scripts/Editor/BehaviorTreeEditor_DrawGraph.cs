@@ -29,10 +29,31 @@ namespace BehaviorTree
 
         Dictionary<string, object> m_CopiedAttributes = new Dictionary<string, object>();
 
+
+        Dictionary<NodeBase, Rect> m_GraphNodeToRect = new Dictionary<NodeBase, Rect>();
+
+        bool m_IsGraphDragging = false;
+        GraphDragType m_GraphDragType = GraphDragType.None;
+        public enum GraphDragType
+        {
+            None = 0,
+
+            DragScroll,
+        }
+
+        NodeBase m_GraphSelectedNode = null;
+
+
         public void DrawGraph(NodeBase rootNode, bool isEditable = false)
         {
             GUILayout.Space(10);
+
             DrawGraphRecusively(rootNode, isEditable);
+
+            CheckGraphEvent(isEditable);
+
+            // 이벤트때문에라도 계속 갱신시켜주자.
+            Repaint();
         }
 
         void DrawGraphRecusively(NodeBase node, bool isEditable = false)
@@ -62,9 +83,13 @@ namespace BehaviorTree
                         case NodeState.Fail:
                             GUI.color = Color.red;
                             break;
+                        default:
+                            if (m_GraphSelectedNode == node)
+                                GUI.color = Color.cyan;
+                            break;
                     }
 
-                    if (node.parentNode != null && isEditable == true)
+                    if (node.parentNode != null && m_GraphSelectedNode == node && isEditable == true)
                     {
                         var parentNode = node.parentNode;
                         var nodeIndex = parentNode.ChildIndexOf(node);
@@ -97,7 +122,7 @@ namespace BehaviorTree
                     }
                     else
                     {
-                        GUILayout.Box("", GUILayout.ExpandWidth(true));
+                        GUILayout.Box("", GUILayout.ExpandWidth(true), GUILayout.Height(17));
                     }
 
                     if (isEditable == true)
@@ -232,7 +257,13 @@ namespace BehaviorTree
                         GUILayout.Box("", GUILayout.ExpandWidth(true));
                     }
                     GUILayout.EndVertical();
+
                     parentRect = GUILayoutUtility.GetLastRect();
+                    if (m_GraphNodeToRect.ContainsKey(node))
+                        m_GraphNodeToRect[node] = parentRect;
+                    else
+                        m_GraphNodeToRect.Add(node, parentRect);
+
                     GUI.color = defaultColor;
                 }
                 GUILayout.FlexibleSpace();
@@ -297,6 +328,46 @@ namespace BehaviorTree
                 GUILayout.FlexibleSpace();
             }
             EditorGUILayout.EndVertical();
+        }
+
+        void CheckGraphEvent(bool isEditable)
+        {
+            switch(Event.current.type)
+            {
+                case EventType.MouseDown:
+                    m_GraphDragType = GraphDragType.DragScroll;
+                    m_IsGraphDragging = false;
+                    break;
+                case EventType.MouseUp:
+                case EventType.MouseLeaveWindow:
+                    if (m_IsGraphDragging == false)
+                    {
+                        m_GraphSelectedNode = null;
+                        foreach (var keypair in m_GraphNodeToRect)
+                        {
+                            if (keypair.Key == null) continue;
+                            if (keypair.Value.Contains(Event.current.mousePosition) == false) continue;
+                            m_GraphSelectedNode = keypair.Key;
+                            break;
+                        }
+                    }
+                    m_GraphDragType = GraphDragType.None;
+                    m_IsGraphDragging = false;
+                    break;
+            }
+
+            if (m_GraphDragType != GraphDragType.None &&
+                Event.current.type == EventType.MouseDrag)
+            {
+                m_IsGraphDragging = true;
+                switch (m_GraphDragType)
+                {
+                    case GraphDragType.DragScroll:
+                        m_GraphScroll += -Event.current.delta;
+                        Event.current.Use();
+                        break;
+                }
+            }
         }
     }
 }
